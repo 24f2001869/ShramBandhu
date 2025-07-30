@@ -20,6 +20,8 @@ pyasn1
 pyasn1-modules
 pyserial
 pytz
+python-dotenv
+
 PyYAML
 requests
 six
