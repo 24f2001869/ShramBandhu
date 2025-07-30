@@ -17,3 +17,4 @@ python-dotenv==1.1.1
 requests
 six
 uvicorn>=0.29.0
+twilio
