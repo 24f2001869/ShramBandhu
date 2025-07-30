@@ -25,3 +25,4 @@ google-auth
 google-cloud-speech
 razorpay
 setuptools
+email-validator
