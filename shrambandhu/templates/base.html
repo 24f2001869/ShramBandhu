@@ -1,0 +1,254 @@
+{# shrambandhu/templates/base.html (Updated with Find Jobs link) #}
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    {# --- Add CSRF Token Meta Tag --- #}
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
+    <meta name="description" content="ShramBandhu - Connecting skilled workers with employment opportunities">
+    <title>{% block title %}ShramBandhu - Worker Platform{% endblock %}</title>
+
+    <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+     crossorigin=""/>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin=""></script>
+
+    <style>
+        /* Ensure map containers have a defined height */
+        .leaflet-map-container {
+            height: 350px; /* Adjust as needed */
+            width: 100%;
+            border-radius: 0.375rem; /* rounded-md */
+            border: 1px solid #d1d5db; /* border-gray-300 */
+        }
+        /* Fix potential z-index issue with Tailwind modals/dropdowns */
+        .leaflet-pane { z-index: 400; }
+        .leaflet-top, .leaflet-bottom { z-index: 1000; } /* Ensure controls are on top */
+    </style>
+
+    <link href="{{ url_for('static', filename='css/main.css') }}" rel="stylesheet">
+
+    {% block head %}{% endblock %}
+</head>
+<body class="flex flex-col min-h-screen bg-gray-100"> {# Changed bg to gray-100 for slightly softer background #}
+    <nav class="bg-blue-600 text-white shadow-lg sticky top-0 z-50"> {# Made navbar sticky #}
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16"> {# Standard height #}
+                <a href="{{ url_for('index') }}" class="flex items-center space-x-2 flex-shrink-0">
+                    {# <img src="{{ url_for('static', filename='images/logo.png') }}" alt="ShramBandhu Logo" class="h-8 w-auto"> #} {# Example using image logo #}
+                     <i class="fas fa-hands-helping text-2xl text-white"></i>
+                     <span class="text-xl font-bold tracking-tight text-white">ShramBandhu</span>
+                </a>
+
+                <div class="hidden md:flex items-center space-x-5 lg:space-x-6">
+                    {% if current_user.is_authenticated %}
+                        {# Common Links for All Logged-in Users (Example) #}
+                        {# <a href="{{ url_for('common.help') }}" class="text-sm font-medium text-blue-100 hover:text-white transition px-3 py-2 rounded-md"><i class="fas fa-question-circle mr-1"></i> Help</a> #}
+
+                        {% if current_user.role == 'worker' %}
+                            <a href="{{ url_for('worker.dashboard') }}" class="text-sm font-medium text-blue-100 hover:text-white transition px-3 py-2 rounded-md"><i class="fas fa-tachometer-alt mr-1"></i> Dashboard</a>
+                            <a href="{{ url_for('worker.my_applications') }}" class="text-sm font-medium text-blue-100 hover:text-white transition px-3 py-2 rounded-md"><i class="fas fa-file-alt mr-1"></i> My Applications</a>
+                            <a href="{{ url_for('worker.find_jobs') }}" class="text-sm font-medium text-blue-100 hover:text-white transition px-3 py-2 rounded-md"><i class="fas fa-search mr-1"></i> Find Jobs</a> {# <-- ADDED LINK #}
+                            <a href="{{ url_for('worker.my_certifications') }}" class="text-sm font-medium text-blue-100 hover:text-white transition px-3 py-2 rounded-md"><i class="fas fa-certificate mr-1"></i> Certifications</a>
+                            <a href="{{ url_for('worker.profile') }}" class="text-sm font-medium text-blue-100 hover:text-white transition px-3 py-2 rounded-md"><i class="fas fa-user-edit mr-1"></i> Profile</a>
+
+                        {% elif current_user.role == 'employer' %}
+                             <a href="{{ url_for('employer.dashboard') }}" class="text-sm font-medium text-blue-100 hover:text-white transition px-3 py-2 rounded-md"><i class="fas fa-tachometer-alt mr-1"></i> Dashboard</a>
+                             <a href="{{ url_for('employer.post_job') }}" class="text-sm font-medium text-blue-100 hover:text-white transition px-3 py-2 rounded-md"><i class="fas fa-plus-circle mr-1"></i> Post Job</a>
+                             <a href="#" class="text-sm font-medium text-blue-100 hover:text-white transition px-3 py-2 rounded-md"><i class="fas fa-users mr-1"></i> My Workers</a> {# Example Link #}
+                             <a href="{{ url_for('employer.payment_history') }}" class="text-sm font-medium text-blue-100 hover:text-white transition px-3 py-2 rounded-md"><i class="fas fa-history mr-1"></i> Payments</a>
+
+                        {% elif current_user.role == 'admin' %}
+                            <a href="{{ url_for('admin.dashboard') }}" class="text-sm font-medium text-blue-100 hover:text-white transition px-3 py-2 rounded-md"><i class="fas fa-cogs mr-1"></i> Admin Panel</a>
+                            {# Add other admin links as needed #}
+                        {% endif %}
+                        <a href="{{ url_for('auth.logout') }}" class="text-sm font-medium text-blue-100 hover:text-white transition px-3 py-2 rounded-md"><i class="fas fa-sign-out-alt mr-1"></i> Logout</a>
+                    {% else %}
+                        {# Links for anonymous users #}
+                        <a href="{{ url_for('index') }}#features" class="text-sm font-medium text-blue-100 hover:text-white transition px-3 py-2 rounded-md">Features</a> {# Example Link #}
+                        <a href="{{ url_for('auth.login') }}" class="text-sm font-medium text-blue-100 hover:text-white transition px-3 py-2 rounded-md"><i class="fas fa-sign-in-alt mr-1"></i> Login</a>
+                        <a href="{{ url_for('auth.register') }}" class="bg-white text-blue-600 hover:bg-blue-50 px-4 py-2 rounded-md text-sm font-medium transition shadow-sm">Register</a>
+                    {% endif %}
+                </div>
+
+                <div class="-mr-2 flex md:hidden">
+                    <button type="button" class="bg-blue-600 inline-flex items-center justify-center p-2 rounded-md text-blue-200 hover:text-white hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-blue-600 focus:ring-white" aria-controls="mobile-menu" aria-expanded="false" id="mobile-menu-button">
+                        <span class="sr-only">Open main menu</span>
+                        <svg class="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true" id="menu-icon-open">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                        <svg class="hidden h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true" id="menu-icon-close">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="md:hidden hidden" id="mobile-menu">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                 {% if current_user.is_authenticated %}
+                    {% if current_user.role == 'worker' %}
+                        <a href="{{ url_for('worker.dashboard') }}" class="text-blue-100 hover:bg-blue-500 hover:text-white block px-3 py-2 rounded-md text-base font-medium"><i class="fas fa-tachometer-alt w-5 mr-2 inline-block"></i> Dashboard</a>
+                        <a href="{{ url_for('worker.my_applications') }}" class="text-blue-100 hover:bg-blue-500 hover:text-white block px-3 py-2 rounded-md text-base font-medium"><i class="fas fa-file-alt w-5 mr-2 inline-block"></i> My Applications</a>
+                        <a href="{{ url_for('worker.find_jobs') }}" class="text-blue-100 hover:bg-blue-500 hover:text-white block px-3 py-2 rounded-md text-base font-medium"><i class="fas fa-search w-5 mr-2 inline-block"></i> Find Jobs</a> {# <-- ADDED LINK #}
+                        <a href="{{ url_for('worker.my_certifications') }}" class="text-blue-100 hover:bg-blue-500 hover:text-white block px-3 py-2 rounded-md text-base font-medium"><i class="fas fa-certificate w-5 mr-2 inline-block"></i> Certifications</a>
+                        <a href="{{ url_for('worker.profile') }}" class="text-blue-100 hover:bg-blue-500 hover:text-white block px-3 py-2 rounded-md text-base font-medium"><i class="fas fa-user-edit w-5 mr-2 inline-block"></i> Profile</a>
+
+                    {% elif current_user.role == 'employer' %}
+                        <a href="{{ url_for('employer.dashboard') }}" class="text-blue-100 hover:bg-blue-500 hover:text-white block px-3 py-2 rounded-md text-base font-medium"><i class="fas fa-tachometer-alt w-5 mr-2 inline-block"></i> Dashboard</a>
+                        <a href="{{ url_for('employer.post_job') }}" class="text-blue-100 hover:bg-blue-500 hover:text-white block px-3 py-2 rounded-md text-base font-medium"><i class="fas fa-plus-circle w-5 mr-2 inline-block"></i> Post Job</a>
+                        <a href="#" class="text-blue-100 hover:bg-blue-500 hover:text-white block px-3 py-2 rounded-md text-base font-medium"><i class="fas fa-users w-5 mr-2 inline-block"></i> My Workers</a> {# Example Link #}
+                        <a href="{{ url_for('employer.payment_history') }}" class="text-blue-100 hover:bg-blue-500 hover:text-white block px-3 py-2 rounded-md text-base font-medium"><i class="fas fa-history w-5 mr-2 inline-block"></i> Payments</a>
+
+                    {% elif current_user.role == 'admin' %}
+                         <a href="{{ url_for('admin.dashboard') }}" class="text-blue-100 hover:bg-blue-500 hover:text-white block px-3 py-2 rounded-md text-base font-medium"><i class="fas fa-cogs w-5 mr-2 inline-block"></i> Admin Panel</a>
+                    {% endif %}
+                     <a href="{{ url_for('auth.logout') }}" class="text-blue-100 hover:bg-blue-500 hover:text-white block px-3 py-2 rounded-md text-base font-medium"><i class="fas fa-sign-out-alt w-5 mr-2 inline-block"></i> Logout</a>
+                {% else %}
+                     <a href="{{ url_for('index') }}#features" class="text-blue-100 hover:bg-blue-500 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Features</a>
+                     <a href="{{ url_for('auth.login') }}" class="text-blue-100 hover:bg-blue-500 hover:text-white block px-3 py-2 rounded-md text-base font-medium"><i class="fas fa-sign-in-alt w-5 mr-2 inline-block"></i> Login</a>
+                     <a href="{{ url_for('auth.register') }}" class="bg-white text-blue-600 hover:bg-blue-50 block px-3 py-2 rounded-md text-base font-medium">Register</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex-grow"> {# Removed container here, apply in child templates #}
+        {# Flash Messages Section - Enhanced Styling #}
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 mt-4 mb-2"> {# Added container for messages #}
+             {% with messages = get_flashed_messages(with_categories=true) %}
+                 {% if messages %}
+                     <div class="space-y-3">
+                         {% for category, message in messages %}
+                             {% set alert_color = 'blue' %} {# Default color #}
+                             {% if category == 'error' or category == 'danger' %} {% set alert_color = 'red' %}
+                             {% elif category == 'success' %} {% set alert_color = 'green' %}
+                             {% elif category == 'warning' %} {% set alert_color = 'yellow' %}
+                             {% endif %}
+                             <div class="bg-{{ alert_color }}-50 border-l-4 border-{{ alert_color }}-400 p-4 rounded-md shadow-sm" role="alert">
+                                 <div class="flex">
+                                     <div class="flex-shrink-0">
+                                         {# Icons based on category #}
+                                         {% if alert_color == 'red' %}
+                                             <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg>
+                                         {% elif alert_color == 'green' %}
+                                             <svg class="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
+                                         {% elif alert_color == 'yellow' %}
+                                             <svg class="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+                                         {% else %} {# Info/Default #}
+                                             <svg class="h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" /></svg>
+                                         {% endif %}
+                                     </div>
+                                     <div class="ml-3">
+                                         <p class="text-sm font-medium text-{{ alert_color }}-800">{{ message }}</p>
+                                     </div>
+                                 </div>
+                             </div>
+                         {% endfor %}
+                     </div>
+                 {% endif %}
+             {% endwith %}
+        </div>
+
+        {% block content %}{% endblock %} {# Main content from child templates goes here #}
+    </main>
+
+    <footer class="bg-gray-800 text-white mt-auto"> {# mt-auto pushes footer down #}
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8">
+                {# Footer Column 1: Brand #}
+                <div class="lg:col-span-1">
+                    <a href="{{ url_for('index') }}" class="flex items-center space-x-2 mb-4">
+                         <i class="fas fa-hands-helping text-2xl text-blue-400"></i>
+                         <span class="text-xl font-bold tracking-tight text-white">ShramBandhu</span>
+                    </a>
+                    <p class="text-sm text-gray-300">Connecting skilled workers with employment opportunities across India.</p>
+                </div>
+                 {# Footer Column 2: Quick Links #}
+                <div>
+                    <h4 class="text-sm font-semibold text-gray-400 tracking-wider uppercase mb-4">Quick Links</h4>
+                    <ul class="space-y-2">
+                        <li><a href="{{ url_for('index') }}" class="text-sm text-gray-300 hover:text-white transition">Home</a></li>
+                        <li><a href="#" class="text-sm text-gray-300 hover:text-white transition">About Us</a></li>
+                         {# Add links to Find Jobs based on role #}
+                         {% if current_user.is_authenticated and current_user.role == 'worker' %}
+                            <li><a href="{{ url_for('worker.find_jobs') }}" class="text-sm text-gray-300 hover:text-white transition">Find Jobs</a></li>
+                         {% endif %}
+                         {% if current_user.is_authenticated and current_user.role == 'employer' %}
+                            <li><a href="{{ url_for('employer.post_job') }}" class="text-sm text-gray-300 hover:text-white transition">Post a Job</a></li>
+                         {% endif %}
+                         <li><a href="#" class="text-sm text-gray-300 hover:text-white transition">Help Center</a></li>
+                    </ul>
+                </div>
+                 {# Footer Column 3: Legal #}
+                <div>
+                    <h4 class="text-sm font-semibold text-gray-400 tracking-wider uppercase mb-4">Legal</h4>
+                     <ul class="space-y-2">
+                        <li><a href="#" class="text-sm text-gray-300 hover:text-white transition">Privacy Policy</a></li>
+                        <li><a href="#" class="text-sm text-gray-300 hover:text-white transition">Terms of Service</a></li>
+                        <li><a href="#" class="text-sm text-gray-300 hover:text-white transition">Contact Us</a></li>
+                    </ul>
+                </div>
+                 {# Footer Column 4: Contact (Optional) #}
+                <div>
+                    <h4 class="text-sm font-semibold text-gray-400 tracking-wider uppercase mb-4">Contact Info</h4>
+                    <ul class="space-y-2 text-sm text-gray-300">
+                        <li class="flex items-center">
+                            <i class="fas fa-envelope w-4 mr-2"></i> contact@shrambandhu.app {# Use .app or .com #}
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-phone-alt w-4 mr-2"></i> +91 98765 43210
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-map-marker-alt w-4 mr-2"></i> Hyderabad, India
+                        </li>
+                    </ul>
+                    {# Social Media Links (Optional) #}
+                    <div class="mt-4 flex space-x-4">
+                         <a href="#" class="text-gray-400 hover:text-white transition"><span class="sr-only">Facebook</span><i class="fab fa-facebook-f"></i></a>
+                         <a href="#" class="text-gray-400 hover:text-white transition"><span class="sr-only">Twitter</span><i class="fab fa-twitter"></i></a>
+                         <a href="#" class="text-gray-400 hover:text-white transition"><span class="sr-only">LinkedIn</span><i class="fab fa-linkedin-in"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-8 pt-8 border-t border-gray-700 text-center">
+                <p class="text-sm text-gray-400">&copy; {{ now().year }} ShramBandhu. All rights reserved.</p> {# Dynamic year #}
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const btn = document.getElementById('mobile-menu-button');
+        const menu = document.getElementById('mobile-menu');
+        const iconOpen = document.getElementById('menu-icon-open');
+        const iconClose = document.getElementById('menu-icon-close');
+
+        btn.addEventListener('click', () => {
+            menu.classList.toggle('hidden');
+            iconOpen.classList.toggle('hidden');
+            iconOpen.classList.toggle('block');
+            iconClose.classList.toggle('hidden');
+            iconClose.classList.toggle('block');
+            // Toggle aria-expanded attribute
+            const isExpanded = menu.classList.contains('hidden') ? 'false' : 'true';
+            btn.setAttribute('aria-expanded', isExpanded);
+        });
+    </script>
+
+    {# Block for page-specific scripts, includes super() to keep base scripts #}
+    {% block scripts %}{% endblock %}
+</body>
+</html>

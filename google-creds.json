@@ -1,0 +1,14 @@
+{
+    "type": "service_account",
+    "project_id": "shrambandhu-voiceapi",
+    "private_key_id": "433998cb61483d6c1b039636acff2444d99c401a",
+    "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCdMWCusiU9IvWN\n+JVwpTrTtdMJp9gMnNMf9UpSNVeLSry+7cpcuUnJxd4XP8jONhP6i6eJvPZZXHZq\ni4fKe8sNpzbtkYZzIMQyWEWjEm6oT4qXwszw510ezHh4ttjYD4HPdsbXK1t2Y9dk\n4uTo6yuepybeQ6+JnxCV8tt+f55D1jfSzYYletPh17deFYfTR63TCnLNXIkzud1R\n868RGu0BYEW39OZF1N7wSg95nYJzu7DBO2LQe/xKtAjkCYezejRR4nbwF2xa6j1N\n9HqmtHPwyaJ4Os3aUOCA7wc+XZyPD7S1aEJYih6o9h9Avbc1mWKli5CFsIPupZrj\nvUSOqSLDAgMBAAECggEAE8mBFnHdrCoivOymFcLxenBF5iOXAlIaEB4hbThtEl9Q\nY7xXyn+XIUC4vzZ2luFJzIfDNDHG1OLbE82ymd4mu6DpPNMibeBEXONYXg8A7PZD\nnOzsPVryZuEYPSHPKWDHrLo9N3KsFbq7BLu8UvGKJnN7ZLkid0bAS2UsahUIcsNp\nbvYzMHw8S+rnj4wMpWRIJeAwinWuBWXsoaPsim0NtLHDB7Pbslt/hOqmtkz6U5wu\nk+O4/w38L5/LD6a5tcRh2BpAKr/tVeJyNqqm+HfO/wYp4wCdbXUeT0Sp1p7+erlq\nO0LVd4dp8tQmBJaj6Hhrs/f/Hirdj4hIZOQs1b6MSQKBgQDbOBjYFMj2iz/eai87\noNPTlwEUgUOoIfmJ9DqtNaLS7cVXNungPlnz+DljcHBZT7ng+fcMKft2xIuopqTo\nqTUx3Usa7QLVKOptZ8ZXhMAF1K2TgaqA7Dk2bA/KYGeCYIaKMFRHGK1EFFjF/swy\nn8RcxZ5RCzwVKte3/2YYptTTFQKBgQC3kSDfN/exP301IiteLoOHAMQlC2kEzhAT\nacl9X2rmJd5HV+YQG5fH8TOtQgaHE1u+39MDyEkfbphWU7N2EtIxzg1if2PSZiY/\nL2Xu0e5n60V1Eo8rhwpWoCxrl3vIeV3TpDtRNLngdWohc0irjrc3iKeW+3QZijRF\no6nWdR/0dwKBgQCZF6wB+0H9K3IHGZCyy7Yi5inS8BMXr+Jc/TqdDAAR3gsaxTa/\na8vWHVu2nidXt93Px8FHtWnvn4MI3Jf+A20qzahNvYdk5ZYRoY9aP1L6v3QYt00j\ni9TItN6yLnEbE93hU68Hl6wpByyX2UExeXHgeAIAByCGh8zuqmXagWfPoQKBgFl5\nW9Rxq0Gx+I2Vgh39/g4nyXNlBGNbLWrI/XUmtSxI+Pc9WN4xFOJYJyAkNppQTT/U\nST5muX2gopAxbB/5PIsaLFv+S+GZ+LqDl+O4X8Q3YTuXOEG3KMrgd8ZZp/QndBxc\nyKzkTlWh5YE4eAtnHNbsvQNSvVxViPUIuRfXLyQxAoGAKU8D0oKhCHBd4bAkCJcL\n4bHLyNuZKwpSzz0ZpyYolAzqpvDQwA8Ssm723Z2iCW+La9TaZvfiiFJWlA5I+f8Y\nIo3Yo+2zDj1CEACjUk6b+fVZnIzTS+eydahaVibz1M94oyoK1FStDx+sCGLyiCYD\n8+WWk7sltjf3DQB33E17G/o=\n-----END PRIVATE KEY-----\n",
+    "client_email": "speech-api-sa@shrambandhu-voiceapi.iam.gserviceaccount.com",
+    "client_id": "112027830808920979365",
+    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+    "token_uri": "https://oauth2.googleapis.com/token",
+    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+    "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/speech-api-sa%40shrambandhu-voiceapi.iam.gserviceaccount.com",
+    "universe_domain": "googleapis.com"
+  }
+  

@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}Complete Payment - ShramBandhu{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="max-w-md mx-auto bg-white p-8 rounded-2xl shadow-xl border border-gray-200">
+        <h1 class="text-2xl font-bold text-gray-800 mb-4 text-center">Complete Your Payment</h1>
+
+        {# Summary Display #}
+        <div class="mb-6 text-center text-sm space-y-1">
+             {% if application and application.job and application.worker %}
+            <p><strong>Job:</strong> {{ application.job.title }}</p>
+            <p><strong>Worker:</strong> {{ application.worker.name }}</p>
+            {# Amount comes from the order object, already in paise #}
+            <p><strong>Amount:</strong> <span class="font-semibold text-lg text-green-600">₹ {{ (order.amount / 100.0) | round(2) }}</span></p>
+             {% else %}
+             <p class="text-red-500">Error: Order details missing.</p>
+             {% endif %}
+        </div>
+
+        {% if order %}
+        <p class="text-center text-gray-600 mb-6">Click the button below to proceed with Razorpay secure checkout.</p>
+
+        <div class="text-center">
+            {# --- Razorpay Button --- #}
+            <button id="rzp-button1" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                 Pay with Razorpay
+            </button>
+            {# --------------------- #}
+        </div>
+
+        <div class="text-xs text-center text-gray-500 mt-6">
+             Payment processed securely by Razorpay. Order ID: {{ order.id }}
+        </div>
+        {% else %}
+         <p class="text-center text-red-500 mb-6">Could not create payment order.</p>
+        {% endif %}
+
+        <div class="text-center mt-4">
+             <a href="{{ url_for('employer.view_job', job_id=(application.job.id if application and application.job else 0)) }}" class="text-sm text-gray-500 hover:underline">&larr; Cancel Payment</a>
+        </div>
+
+    </div>
+</div>
+
+{# --- Razorpay Checkout Script --- #}
+{% if order and key %}
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+    var options = {
+        "key": "{{ key }}", // Your Razorpay Key ID
+        "amount": "{{ order.amount }}", // Amount is in paise
+        "currency": "{{ order.currency }}",
+        "name": "ShramBandhu", // Your business name
+        // *** FIX: Use tojson filter here ***
+        "description": {{ "Payment for Job: {} (ID: {})".format(application.job.title, application.job.id) | tojson }},
+        {# "image": "{{ url_for('static', filename='images/logo-small.png') }}", #}
+        "order_id": "{{ order.id }}",
+        "callback_url": "{{ url_for('employer.payment_callback', _external=True) }}", // Ensure this route exists and handles verification
+        "prefill": { // Optional - Ensure these user attributes exist
+            "name": {{ current_user.name | default('', true) | tojson }},
+            "email": {{ current_user.email | default('', true) | tojson }},
+            "contact": {{ current_user.phone | default('', true) | tojson }}
+        },
+        "notes": { // Ensure these values exist
+            "job_id": "{{ application.job.id }}",
+            "application_id": "{{ application.id }}",
+            "employer_id": "{{ current_user.id }}",
+            "worker_id": "{{ application.worker.id }}"
+        },
+        "theme": {
+            "color": "#3B82F6" // Tailwind Blue-500
+        }
+    };
+    var rzp1 = new Razorpay(options);
+
+    // Optional: Handle payment failure/close events
+    rzp1.on('payment.failed', function (response){
+            console.error("Payment Failed:", response.error);
+            // Use your showAlert function if available, otherwise basic alert
+            if(typeof showAlert === 'function') {
+                showAlert("Payment Failed: " + response.error.description + " (Code: " + response.error.code +")", 'danger', 10000);
+            } else {
+                alert("Payment Failed: " + response.error.description + " (Code: " + response.error.code +")");
+            }
+            // Maybe redirect back to job detail after a delay?
+            // setTimeout(() => { window.location.href = "{{ url_for('employer.view_job', job_id=application.job.id) }}"; }, 3000);
+    });
+
+    // Handle modal closing without payment attempt (optional)
+    // options.modal = {
+    //     ondismiss: function(){
+    //         console.log("Checkout form closed");
+    //     }
+    // };
+
+    // Attach event listener to the button
+    const razorpayButton = document.getElementById('rzp-button1');
+    if (razorpayButton) {
+        razorpayButton.onclick = function(e){
+            rzp1.open();
+            e.preventDefault();
+        }
+    } else {
+        console.error("Razorpay button not found!");
+    }
+</script>
+{% endif %}
+{% endblock %}

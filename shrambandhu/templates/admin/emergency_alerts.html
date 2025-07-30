@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}Emergency Alerts | Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold">Emergency Alerts</h1>
+        <div class="text-sm text-gray-500">
+            <span class="font-medium">Total Alerts:</span> {{ alerts|length }}
+        </div>
+    </div>
+
+    {% if not alerts %}
+    <div class="bg-white rounded-lg shadow-md p-8 text-center text-gray-500">
+        <i class="fas fa-bell-slash text-4xl mb-4 text-gray-300"></i>
+        <p class="text-lg">No emergency alerts found</p>
+    </div>
+    {% else %}
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Worker</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for alert in alerts %}
+                    <tr class="{% if alert.status == 'active' %}bg-red-50{% else %}bg-green-50{% endif %}">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-user text-blue-600"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <div class="font-medium">
+                                        {{ alert.worker.name or 'Unknown' }}
+                                    </div>
+                                    <div class="text-sm text-gray-500">
+                                        {{ alert.worker.phone }}
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <a href="https://www.google.com/maps?q={{ alert.location_lat }},{{ alert.location_lng }}" 
+                               target="_blank" 
+                               class="text-blue-600 hover:underline flex items-center">
+                                <i class="fas fa-map-marker-alt mr-2"></i>
+                                View on Map
+                            </a>
+                            <div class="text-xs text-gray-500 mt-1">
+                                ({{ "%.4f"|format(alert.location_lat) }}, {{ "%.4f"|format(alert.location_lng) }})
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                {% if alert.status == 'active' %}bg-red-100 text-red-800
+                                {% else %}bg-green-100 text-green-800{% endif %}">
+                                {{ alert.status|title }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <div>{{ alert.created_at.strftime('%d %b %Y') }}</div>
+                            <div>{{ alert.created_at.strftime('%I:%M %p') }}</div>
+                            {% if alert.resolved_at %}
+                            <div class="text-xs mt-1">
+                                Resolved: {{ alert.resolved_at.strftime('%d %b %I:%M %p') }}
+                            </div>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            {% if alert.status == 'active' %}
+                            <form method="POST" action="{{ url_for('admin.resolve_alert', alert_id=alert.id) }}" class="inline">
+                                <button type="submit" 
+                                        class="text-green-600 hover:text-green-900 mr-3">
+                                    <i class="fas fa-check-circle"></i> Resolve
+                                </button>
+                            </form>
+                            {% endif %}
+                            <a href="tel:{{ alert.worker.phone }}" 
+                               class="text-blue-600 hover:text-blue-900 mr-3">
+                                <i class="fas fa-phone-alt"></i> Call
+                            </a>
+                            <a href="https://wa.me/{{ alert.worker.phone }}" 
+                               target="_blank" 
+                               class="text-green-500 hover:text-green-700">
+                                <i class="fab fa-whatsapp"></i> WhatsApp
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Emergency Contacts Quick Reference -->
+    <div class="mt-8 bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-semibold mb-4">Emergency Contacts Quick Reference</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="border rounded-lg p-4 hover:bg-gray-50">
+                <h3 class="font-medium text-red-600 mb-2">
+                    <i class="fas fa-ambulance mr-2"></i>Medical Emergency
+                </h3>
+                <p class="text-gray-600">Call: <a href="tel:108" class="text-blue-600">108</a></p>
+                <p class="text-gray-600">SMS: 'HELP' to 108</p>
+            </div>
+            <div class="border rounded-lg p-4 hover:bg-gray-50">
+                <h3 class="font-medium text-blue-600 mb-2">
+                    <i class="fas fa-police-box mr-2"></i>Police
+                </h3>
+                <p class="text-gray-600">Call: <a href="tel:100" class="text-blue-600">100</a></p>
+                <p class="text-gray-600">SMS: 'POLICE' to 100</p>
+            </div>
+            <div class="border rounded-lg p-4 hover:bg-gray-50">
+                <h3 class="font-medium text-purple-600 mb-2">
+                    <i class="fas fa-helmet-safety mr-2"></i>Disaster Management
+                </h3>
+                <p class="text-gray-600">Call: <a href="tel:1078" class="text-blue-600">1078</a></p>
+                <p class="text-gray-600">NDRF: <a href="tel:011-24363260" class="text-blue-600">011-24363260</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Auto-refresh the page every 60 seconds to check for new alerts
+    setTimeout(function() {
+        window.location.reload();
+    }, 60000);
+</script>
+{% endblock %}

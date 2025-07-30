@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% from "_formhelpers.html" import render_field %}
+
+{% block title %}Edit Job: {{ job.title }} - ShramBandhu{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+     <div class="max-w-3xl mx-auto">
+        <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-xl border border-gray-200">
+            <div class="flex justify-between items-center mb-6 pb-3 border-b border-gray-200">
+                 <h1 class="text-2xl font-bold text-gray-800">Edit Job Posting</h1>
+                  <a href="{{ url_for('employer.view_job', job_id=job.id) }}" class="text-sm text-blue-600 hover:underline whitespace-nowrap">&larr; Back to Job</a>
+            </div>
+
+            <form method="POST" action="{{ url_for('employer.edit_job', job_id=job.id) }}" class="space-y-6" novalidate>
+                {{ form.hidden_tag() }}
+
+                {{ render_field(form.title) }}
+                {{ render_field(form.description, rows=4) }}
+
+                 <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
+                    {{ render_field(form.salary, type="number", step="10", min="1") }}
+                    {{ render_field(form.salary_frequency) }}
+                </div>
+
+                 <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
+                    {{ render_field(form.job_type) }}
+                    <div id="duration-field-container">
+                         {{ render_field(form.duration_days, type="number", min="1") }}
+                    </div>
+                 </div>
+
+                 {{ render_field(form.skills) }}
+
+                 {# --- Map Integration --- #}
+                 <div class="space-y-3 pt-2">
+                     <label for="address" class="block text-sm font-medium text-gray-700">Job Location*</label>
+                     <p class="text-xs text-gray-500 -mt-1 mb-1">Update address or drag map pin. Pin location takes priority.</p>
+                     {{ render_field(form.address, label_visible=false) }}
+                     <div id="map" class="leaflet-map-container"></div>
+                 </div>
+                 {# --- End Map Integration --- #}
+
+                <div class="pt-5 flex flex-col sm:flex-row gap-4">
+                     <button type="submit" class="w-full sm:w-auto inline-flex justify-center py-2.5 px-6 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out">
+                        Update Job
+                    </button>
+                    <a href="{{ url_for('employer.view_job', job_id=job.id) }}" class="w-full sm:w-auto inline-flex justify-center py-2.5 px-6 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+{% block scripts %}
+{{ super() }}
+{# --- Include Leaflet Map JS --- #}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // --- Job Type / Duration Field Logic ---
+    const jobTypeSelect = document.getElementById('job_type');
+    const durationContainer = document.getElementById('duration-field-container');
+    const durationInput = document.getElementById('duration_days');
+    function toggleDurationField() {
+        if (jobTypeSelect.value === 'contract') {
+            durationContainer.style.display = 'block';
+            if(durationInput) durationInput.required = true;
+        } else {
+            durationContainer.style.display = 'none';
+             if(durationInput) durationInput.required = false;
+        }
+    }
+    jobTypeSelect.addEventListener('change', toggleDurationField);
+    toggleDurationField();
+
+    // --- Leaflet Map Initialization ---
+    const latInput = document.getElementById('latitude'); // Ensure your Form generates this ID or adjust
+    const lonInput = document.getElementById('longitude'); // Ensure your Form generates this ID or adjust
+    const addressInput = document.getElementById('address');
+    const defaultLat = 17.3850; const defaultLng = 78.4867; // Hyderabad
+    let currentLat = parseFloat(latInput.value) || defaultLat;
+    let currentLng = parseFloat(lonInput.value) || defaultLng;
+
+    const map = L.map('map').setView([currentLat, currentLng], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(map);
+    const marker = L.marker([currentLat, currentLng], { draggable: true, autoPan: true }).addTo(map);
+
+    function updateMarkerAndFields(lat, lng, updateAddress = false) {
+        marker.setLatLng([lat, lng]);
+        if(latInput) latInput.value = lat.toFixed(6); // Check if elements exist
+        if(lonInput) lonInput.value = lng.toFixed(6);
+        if (updateAddress && addressInput) {
+             fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`)
+             .then(response => response.ok ? response.json() : Promise.reject('Nominatim error'))
+             .then(data => { if (data && data.display_name) { addressInput.value = data.display_name; } })
+             .catch(err => console.error('Reverse geocoding failed:', err));
+        }
+    }
+    // Ensure hidden fields have initial values for the JS
+    if(latInput && !latInput.value) latInput.value = currentLat.toFixed(6);
+    if(lonInput && !lonInput.value) lonInput.value = currentLng.toFixed(6);
+
+    marker.on('dragend', function(e) {
+        const pos = marker.getLatLng(); map.panTo(pos); updateMarkerAndFields(pos.lat, pos.lng, true);
+    });
+
+    // Optional: Geolocation to center map initially
+    if (!latInput.value && navigator.geolocation) {
+         navigator.geolocation.getCurrentPosition(position => {
+             const userLat = position.coords.latitude; const userLng = position.coords.longitude;
+             map.setView([userLat, userLng], 14); updateMarkerAndFields(userLat, userLng, true);
+         }, () => { console.warn("Geolocation failed."); });
+    }
+});
+</script>
+{% endblock %}

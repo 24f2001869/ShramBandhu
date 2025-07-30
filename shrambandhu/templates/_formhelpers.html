@@ -1,0 +1,62 @@
+{% macro render_field(field, label_visible=true) %}
+  <div class="mb-4">
+    {% if label_visible %}
+      {{ field.label(class="block text-sm font-medium text-gray-700 mb-1") }}
+    {% endif %}
+
+    {% set css_class = 'appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm ' %}
+    {% if field.type == 'SelectField' %}
+        {% set css_class = css_class + 'bg-white ' %} {# Ensure background for select #}
+    {% endif %}
+    {% if field.errors %}
+      {% set css_class = css_class + 'border-red-500' %}
+    {% endif %}
+
+    {{ field(class=css_class, **kwargs) }} {# Pass additional HTML attributes if needed #}
+
+    {% if field.errors %}
+      <ul class="text-red-500 text-xs italic mt-1">
+      {% for error in field.errors %}
+        <li>{{ error }}</li>
+      {% endfor %}
+      </ul>
+    {% endif %}
+  </div>
+{% endmacro %}
+
+{% macro render_checkbox(field, label_visible=true) %}
+ <div class="flex items-center mb-4">
+    {{ field(class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded") }}
+    {% if label_visible %}
+      {{ field.label(class="ml-2 block text-sm text-gray-900") }}
+     {% endif %}
+ </div>
+ {% if field.errors %}
+  <ul class="text-red-500 text-xs italic -mt-3 mb-3"> {# Adjust margins for checkbox errors #}
+  {% for error in field.errors %}
+    <li>{{ error }}</li>
+  {% endfor %}
+  </ul>
+{% endif %}
+{% endmacro %}
+
+{% macro render_radio(field, label_visible=true) %}
+    {% if label_visible %}
+     <label class="block text-sm font-medium text-gray-700 mb-2">{{ field.label }}</label>
+    {% endif %}
+     <div class="space-y-2">
+     {% for subfield in field %}
+        <div class="flex items-center">
+            {{ subfield(class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300") }}
+            {{ subfield.label(class="ml-3 block text-sm font-medium text-gray-700") }}
+        </div>
+     {% endfor %}
+     </div>
+    {% if field.errors %}
+      <ul class="text-red-500 text-xs italic mt-1">
+      {% for error in field.errors %}
+        <li>{{ error }}</li>
+      {% endfor %}
+      </ul>
+    {% endif %}
+{% endmacro %}

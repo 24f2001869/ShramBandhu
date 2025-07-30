@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title or "My Applications" }} - ShramBandhu{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    {# Page Header #}
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-3 pb-3 border-b border-gray-200">
+        <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">My Job Applications</h1>
+        <a href="{{ url_for('worker.find_jobs') }}" class="text-sm text-blue-600 hover:underline whitespace-nowrap">
+            Find More Jobs &rarr;
+        </a>
+    </div>
+
+    {# Display applications #}
+    {% if not applications_pagination.items %}
+    <div class="bg-white rounded-lg shadow-md border border-gray-200 p-8 text-center text-gray-500">
+        <i class="fas fa-file-alt text-4xl text-gray-300 mb-4"></i>
+        <p class="text-lg mb-4">You haven't applied for any jobs yet.</p>
+        <a href="{{ url_for('worker.find_jobs') }}" class="text-blue-600 hover:underline font-medium">Start applying now</a>
+    </div>
+    {% else %}
+    <div class="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Job Title</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employer</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Applied On</th>
+                        <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for app in applications_pagination.items %}
+                    <tr class="hover:bg-gray-50 transition duration-150 ease-in-out">
+                        {# Job Title #}
+                        <td class="px-6 py-4 whitespace-nowrap align-top">
+                            {# Link to job detail page - Need public job view or adjust endpoint #}
+                            <a href="#" class="text-sm font-medium text-blue-700 hover:underline">{{ app.job.title }}</a>
+                            <p class="text-xs text-gray-500">{{ app.job.address | truncate(40) }}</p>
+                        </td>
+                        {# Employer #}
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 align-top">
+                            {{ app.job.employer.org_name or app.job.employer.name or 'Private Employer' }}
+                        </td>
+                         {# Applied Date #}
+                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 align-top">
+                            {{ app.applied_at.strftime('%d %b %Y') }}
+                         </td>
+                         {# Status #}
+                         <td class="px-6 py-4 whitespace-nowrap text-center align-middle">
+                             <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full capitalize
+                                 {% if app.status == 'accepted' %} bg-green-100 text-green-800
+                                 {% elif app.status == 'rejected' or app.status == 'withdrawn' %} bg-red-100 text-red-800
+                                 {% elif app.status == 'shortlisted' %} bg-blue-100 text-blue-800
+                                 {% else %} bg-yellow-100 text-yellow-800 {% endif %}"> {# Default applied #}
+                                 {{ app.status }}
+                             </span>
+                         </td>
+                         {# Action #}
+                         <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium align-middle">
+                            {% if app.status in ['applied', 'shortlisted'] %}
+                                <form method="POST" action="{{ url_for('worker.withdraw_application', application_id=app.id) }}" onsubmit="return confirm('Are you sure you want to withdraw this application?');">
+                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                     <button type="submit"
+                                             class="px-3 py-1 border border-red-300 text-xs font-medium rounded-md text-red-700 bg-red-50 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-red-500">
+                                         Withdraw
+                                     </button>
+                                </form>
+                            {% else %}
+                                <span class="text-xs text-gray-400">-</span>
+                            {% endif %}
+                         </td>
+                    </tr>
+                    {% endfor %} {# End loop #}
+                </tbody>
+            </table>
+        </div>
+
+        {# --- Pagination Controls --- #}
+        {% if applications_pagination.pages > 1 %}
+        <div class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+            <div class="flex-1 flex justify-between sm:hidden">
+                {% if applications_pagination.has_prev %}
+                <a href="{{ url_for('worker.my_applications', page=applications_pagination.prev_num, **request.args) }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"> Previous </a>
+                {% else %} <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-400 bg-gray-50"> Previous </span> {% endif %}
+                {% if applications_pagination.has_next %}
+                <a href="{{ url_for('worker.my_applications', page=applications_pagination.next_num, **request.args) }}" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"> Next </a>
+                {% else %} <span class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-400 bg-gray-50"> Next </span> {% endif %}
+            </div>
+            <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                <div>
+                    <p class="text-sm text-gray-700">
+                        Showing
+                        <span class="font-medium">{{ applications_pagination.first }}</span>
+                        to
+                        <span class="font-medium">{{ applications_pagination.last }}</span>
+                        of
+                        <span class="font-medium">{{ applications_pagination.total }}</span>
+                        results
+                    </p>
+                </div>
+                <div>
+                    <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                        {# First/Prev Buttons #}
+                         <a href="{{ url_for('worker.my_applications', page=1, **request.args) if applications_pagination.page > 1 else '#' }}" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 {{ 'pointer-events-none opacity-50' if not applications_pagination.has_prev else '' }}">&laquo;</a>
+                         <a href="{{ url_for('worker.my_applications', page=applications_pagination.prev_num, **request.args) if applications_pagination.has_prev else '#' }}" class="relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 {{ 'pointer-events-none opacity-50' if not applications_pagination.has_prev else '' }}">&lsaquo;</a>
+                         {# Page Numbers (Optional) #}
+                         <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700"> Page {{ applications_pagination.page }} of {{ applications_pagination.pages }} </span>
+                         {# Next/Last Buttons #}
+                         <a href="{{ url_for('worker.my_applications', page=applications_pagination.next_num, **request.args) if applications_pagination.has_next else '#' }}" class="relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 {{ 'pointer-events-none opacity-50' if not applications_pagination.has_next else '' }}">&rsaquo;</a>
+                         <a href="{{ url_for('worker.my_applications', page=applications_pagination.pages, **request.args) if applications_pagination.page < applications_pagination.pages else '#' }}" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 {{ 'pointer-events-none opacity-50' if not applications_pagination.has_next else '' }}">&raquo;</a>
+                    </nav>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %} {# End if applications #}
+</div>
+{% endblock %}

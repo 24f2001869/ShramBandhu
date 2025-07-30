@@ -1,0 +1,225 @@
+{# shrambandhu/templates/worker/complete_profile.html #}
+{% extends "base.html" %}
+
+{% block title %}Complete Profile - ShramBandhu{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8 max-w-2xl">
+    <div class="bg-white rounded-lg shadow-md p-8">
+        <h1 class="text-2xl font-bold text-center mb-6">Complete Your Profile</h1>
+        <p class="text-center text-sm text-gray-600 mb-6">
+            Provide your name and skills manually, or use our quick voice registration below.
+        </p>
+
+        {# --- Voice Registration Section --- #}
+        <div class="mb-8 p-6 bg-blue-50 rounded-lg border border-blue-200">
+            <h2 class="text-lg font-semibold mb-2 text-gray-800">Quick Voice Registration</h2>
+            <p class="text-sm text-gray-600 mb-3">Click "Record" and clearly state in Hindi or English:</p>
+            <p class="bg-white p-3 rounded border border-gray-200 text-sm mb-4 shadow-sm">
+                <span class="font-medium">"My name is [your full name], I work as [your primary skills, e.g., mason, plumber, electrician]"</span><br>
+                <span class="text-gray-500">or</span><br>
+                <span class="font-medium">"मेरा नाम [आपका पूरा नाम] है, मैं [आपके मुख्य कौशल] का काम करता हूँ"</span>
+            </p>
+
+            <div class="flex items-center justify-center space-x-4 my-4">
+                <button id="recordButton" type="button" class="px-5 py-2 bg-red-600 text-white font-semibold rounded-lg shadow hover:bg-red-700 transition duration-200 flex items-center gap-2 disabled:opacity-50">
+                     <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4z"></path><path fill-rule="evenodd" d="M5.5 8.5A.5.5 0 016 8h8a.5.5 0 010 1H6a.5.5 0 01-.5-.5z"></path><path fill-rule="evenodd" d="M9 13.5V16h2v-2.5A4.5 4.5 0 006.5 9H5a5 5 0 0010 0h-1.5a4.5 4.5 0 00-4.5 4.5z" clip-rule="evenodd"></path></svg>
+                    Record
+                </button>
+                <button id="stopButton" type="button" class="px-5 py-2 bg-gray-600 text-white font-semibold rounded-lg shadow hover:bg-gray-700 transition duration-200 flex items-center gap-2 disabled:opacity-50" disabled>
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h4a1 1 0 001-1V8a1 1 0 00-1-1H8z" clip-rule="evenodd"></path></svg>
+                    Stop
+                </button>
+                 <button id="sendButton" type="button" class="px-5 py-2 bg-green-600 text-white font-semibold rounded-lg shadow hover:bg-green-700 transition duration-200 flex items-center gap-2 disabled:opacity-50" disabled>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    Send Voice
+                </button>
+            </div>
+            <div id="status" class="text-center text-sm text-gray-600 min-h-[20px]"></div>
+            <div id="audioPlayback" class="text-center mt-3"></div> {# Optional: Playback recorded audio #}
+            <p id="voice-error" class="text-center text-sm text-red-600 mt-2 hidden"></p>
+            <p class="text-xs text-gray-500 text-center mt-2">Ensure you are in a quiet environment for best results.</p>
+        </div>
+
+        {# --- Manual Profile Update Section --- #}
+        <div class="pt-6 border-t border-gray-200">
+             <p class="text-center text-gray-500 mb-4 text-sm">- OR - Update Manually Below -</p>
+             {# Manual form part remains largely the same, ensure names match route logic #}
+             <form method="POST" action="{{ url_for('worker.complete_profile') }}" class="space-y-4" novalidate>
+                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/> {# Add CSRF token #}
+                 <div>
+                     <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                     <input type="text" id="name" name="name" value="{{ user.name or '' }}" required
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                 </div>
+
+                 <div>
+                     <label for="skills" class="block text-sm font-medium text-gray-700 mb-1">Skills (comma separated)</label>
+                     <input type="text" id="skills" name="skills"
+                            value="{{ user.get_skills_list() | join(', ') }}" {# Display skills correctly #}
+                            placeholder="e.g., masonry, carpentry, plumbing" required
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                 </div>
+
+                 <button type="submit"
+                         class="w-full mt-5 bg-blue-600 text-white py-2.5 px-4 rounded-lg hover:bg-blue-700 transition duration-300 ease-in-out font-medium">
+                     Save Manual Update
+                 </button>
+             </form>
+        </div>
+
+    </div> {# End card #}
+</div> {# End container #}
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const recordButton = document.getElementById('recordButton');
+    const stopButton = document.getElementById('stopButton');
+    const sendButton = document.getElementById('sendButton'); // Send button
+    const statusDiv = document.getElementById('status');
+    const audioPlaybackDiv = document.getElementById('audioPlayback');
+    const errorDiv = document.getElementById('voice-error');
+    let mediaRecorder;
+    let audioChunks = [];
+    let audioBlob = null; // To store the final blob
+
+    // Check for MediaRecorder support
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) {
+        statusDiv.textContent = 'Voice recording is not supported by your browser.';
+        recordButton.disabled = true;
+        stopButton.disabled = true;
+        sendButton.disabled = true;
+        return;
+    }
+
+    // --- Event Listeners ---
+    recordButton.onclick = async () => {
+        errorDiv.classList.add('hidden'); // Hide previous errors
+        audioPlaybackDiv.innerHTML = ''; // Clear previous playback
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            // Try specific mime types if default fails or for better compatibility
+            const options = { mimeType: 'audio/ogg; codecs=opus' }; // Try OGG Opus first
+            try {
+                 mediaRecorder = new MediaRecorder(stream, options);
+            } catch (e1) {
+                 console.warn('OGG Opus mimeType not supported, trying default.');
+                 try {
+                    mediaRecorder = new MediaRecorder(stream); // Fallback to browser default
+                 } catch(e2) {
+                     console.error("MediaRecorder initialization failed:", e2);
+                     statusDiv.textContent = 'Could not initialize recorder.';
+                     errorDiv.textContent = 'Audio recording failed to initialize.';
+                     errorDiv.classList.remove('hidden');
+                     return;
+                 }
+            }
+
+            audioChunks = []; // Reset chunks
+            audioBlob = null; // Reset blob
+            mediaRecorder.ondataavailable = event => {
+                audioChunks.push(event.data);
+            };
+
+            mediaRecorder.onstop = () => {
+                audioBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType });
+                const audioUrl = URL.createObjectURL(audioBlob);
+                // Optional: Add playback controls
+                audioPlaybackDiv.innerHTML = `<audio controls src="${audioUrl}" class="w-full"></audio>`;
+                statusDiv.textContent = 'Recording stopped. Ready to send.';
+                stopButton.disabled = true;
+                recordButton.disabled = false;
+                sendButton.disabled = false; // Enable send button
+                // Release the microphone track
+                stream.getTracks().forEach(track => track.stop());
+            };
+
+            mediaRecorder.start();
+            statusDiv.textContent = 'Recording... Click Stop when done.';
+            recordButton.disabled = true;
+            stopButton.disabled = false;
+            sendButton.disabled = true;
+
+        } catch (err) {
+            console.error("Error accessing microphone:", err);
+            statusDiv.textContent = 'Could not access microphone.';
+            errorDiv.textContent = 'Microphone access denied or not found. Please check browser permissions.';
+            errorDiv.classList.remove('hidden');
+            recordButton.disabled = false;
+            stopButton.disabled = true;
+            sendButton.disabled = true;
+        }
+    };
+
+    stopButton.onclick = () => {
+        if (mediaRecorder && mediaRecorder.state === 'recording') {
+            mediaRecorder.stop();
+            // State updates handled by onstop event
+        }
+    };
+
+    sendButton.onclick = async () => {
+        if (!audioBlob) {
+            alert('No audio recorded to send.');
+            return;
+        }
+
+        statusDiv.textContent = 'Sending audio...';
+        sendButton.disabled = true;
+        recordButton.disabled = true; // Disable while sending
+        errorDiv.classList.add('hidden');
+
+        const formData = new FormData();
+        // Send blob with a filename including extension (important for backend processing)
+        let filename = `voice_reg_${Date.now()}.` + (audioBlob.type.split('/')[1].split(';')[0] || 'ogg');
+        formData.append('audio_blob', audioBlob, filename);
+
+        // Add CSRF token if using Flask-WTF CSRFProtect globally
+        const csrfToken = document.querySelector('input[name="csrf_token"]');
+        if (csrfToken) {
+             formData.append('csrf_token', csrfToken.value);
+        }
+
+
+        try {
+            const response = await fetch("{{ url_for('worker.complete_profile') }}", {
+                method: 'POST',
+                body: formData
+                // No 'Content-Type' header needed for FormData, browser sets it correctly
+            });
+
+            if (!response.ok) {
+                // Try to get error message from backend response
+                let errorMsg = `Failed to send audio (HTTP ${response.status}).`;
+                try {
+                    const errorData = await response.json();
+                    errorMsg = errorData.message || errorMsg;
+                } catch (jsonError) { /* Ignore if response isn't JSON */ }
+                throw new Error(errorMsg);
+            }
+
+            const result = await response.json();
+
+            if (result.status === 'success') {
+                statusDiv.textContent = 'Voice registration successful! Redirecting...';
+                // Redirect using the URL provided by the backend
+                window.location.href = result.redirect;
+            } else {
+                throw new Error(result.message || 'Unknown error processing audio.');
+            }
+
+        } catch (error) {
+            console.error('Error sending audio:', error);
+            statusDiv.textContent = 'Failed to send audio.';
+            errorDiv.textContent = `Error: ${error.message}`;
+            errorDiv.classList.remove('hidden');
+            sendButton.disabled = false; // Re-enable send on failure
+            recordButton.disabled = false; // Re-enable record on failure
+        }
+    };
+});
+</script>
+{% endblock %}

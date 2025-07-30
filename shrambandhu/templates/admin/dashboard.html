@@ -1,0 +1,348 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Dashboard Header -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-800">Admin Dashboard</h1>
+            <p class="text-gray-600">Welcome back, {{ current_user.name or 'Admin' }}</p>
+        </div>
+        <div class="mt-4 md:mt-0 flex space-x-2">
+            <span class="px-3 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
+                {{ current_user.role|title }}
+            </span>
+            <span class="px-3 py-1 rounded-full text-xs bg-green-100 text-green-800">
+                {{ datetime.utcnow().strftime('%d %b %Y') }}
+            </span>
+        </div>
+    </div>
+
+    <!-- Quick Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Users Card -->
+        <div class="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 hover:shadow-lg transition">
+            <div class="p-6">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-blue-50 text-blue-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-medium text-gray-500">Total Users</h3>
+                        <p class="text-2xl font-bold">{{ stats.users.total }}</p>
+                    </div>
+                </div>
+                <div class="mt-4 grid grid-cols-3 gap-2 text-center">
+                    <div>
+                        <p class="font-medium">{{ stats.users.workers }}</p>
+                        <p class="text-xs text-gray-500">Workers</p>
+                    </div>
+                    <div>
+                        <p class="font-medium">{{ stats.users.employers }}</p>
+                        <p class="text-xs text-gray-500">Employers</p>
+                    </div>
+                    <div>
+                        <p class="font-medium">{{ stats.users.new_today }}</p>
+                        <p class="text-xs text-gray-500">New Today</p>
+                    </div>
+                </div>
+            </div>
+            <a href="{{ url_for('admin.manage_users') }}" class="block bg-gray-50 px-6 py-3 text-center text-sm font-medium text-blue-600 hover:bg-gray-100">
+                View all users
+            </a>
+        </div>
+
+        <!-- Jobs Card -->
+        <div class="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 hover:shadow-lg transition">
+            <div class="p-6">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-purple-50 text-purple-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-medium text-gray-500">Total Jobs</h3>
+                        <p class="text-2xl font-bold">{{ stats.jobs.total }}</p>
+                    </div>
+                </div>
+                <div class="mt-4 grid grid-cols-3 gap-2 text-center">
+                    <div>
+                        <p class="font-medium">{{ stats.jobs.active }}</p>
+                        <p class="text-xs text-gray-500">Active</p>
+                    </div>
+                    <div>
+                        <p class="font-medium">{{ stats.jobs.completed }}</p>
+                        <p class="text-xs text-gray-500">Completed</p>
+                    </div>
+                    <div>
+                        <p class="font-medium">{{ stats.payments.disputed }}</p>
+                        <p class="text-xs text-gray-500">Disputed</p>
+                    </div>
+                </div>
+            </div>
+            <a href="{{ url_for('admin.manage_jobs') }}" class="block bg-gray-50 px-6 py-3 text-center text-sm font-medium text-blue-600 hover:bg-gray-100">
+                View all jobs
+            </a>
+        </div>
+
+        <!-- Payments Card -->
+        <div class="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 hover:shadow-lg transition">
+            <div class="p-6">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-green-50 text-green-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-medium text-gray-500">Total Payments</h3>
+                        <p class="text-2xl font-bold">₹{{ "%.2f"|format(stats.payments.total_amount) }}</p>
+                    </div>
+                </div>
+                <div class="mt-4 grid grid-cols-3 gap-2 text-center">
+                    <div>
+                        <p class="font-medium">{{ stats.payments.verified }}</p>
+                        <p class="text-xs text-gray-500">Verified</p>
+                    </div>
+                    <div>
+                        <p class="font-medium">{{ stats.payments.disputed }}</p>
+                        <p class="text-xs text-gray-500">Disputed</p>
+                    </div>
+                    <div>
+                        <p class="font-medium">{{ pending_verifications }}</p>
+                        <p class="text-xs text-gray-500">Pending Docs</p>
+                    </div>
+                </div>
+            </div>
+            <a href="{{ url_for('admin.payment_disputes') }}" class="block bg-gray-50 px-6 py-3 text-center text-sm font-medium text-blue-600 hover:bg-gray-100">
+                View payments
+            </a>
+        </div>
+
+        <!-- Certifications Card -->
+        <div class="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 hover:shadow-lg transition">
+            <div class="p-6">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-yellow-50 text-yellow-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-medium text-gray-500">Pending Verifications</h3>
+                        <p class="text-2xl font-bold">{{ pending_certifications }}</p>
+                    </div>
+                </div>
+                <div class="mt-4 grid grid-cols-3 gap-2 text-center">
+                    <div>
+                        <p class="font-medium">{{ pending_verifications }}</p>
+                        <p class="text-xs text-gray-500">Documents</p>
+                    </div>
+                    <div>
+                        <p class="font-medium">{{ pending_certifications }}</p>
+                        <p class="text-xs text-gray-500">Certifications</p>
+                    </div>
+                    
+                </div>
+            </div>
+            <a href="{{ url_for('admin.verify_certifications') }}" class="block bg-gray-50 px-6 py-3 text-center text-sm font-medium text-blue-600 hover:bg-gray-100">
+                View verifications
+            </a>
+        </div>
+    </div>
+
+    <!-- Action Required Section -->
+    <div class="mb-8">
+        <h2 class="text-xl font-semibold mb-4 flex items-center">
+            <span class="w-1 h-6 bg-blue-600 mr-2"></span>
+            Action Required
+        </h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Pending Documents -->
+            <div class="bg-white rounded-xl shadow-md overflow-hidden border border-yellow-100">
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-medium text-gray-800">Pending Documents</h3>
+                        <span class="px-2 py-1 rounded-full text-xs bg-yellow-100 text-yellow-800">{{ pending_verifications }}</span>
+                    </div>
+                    {% if pending_verifications > 0 %}
+                        <div class="space-y-3">
+                            {% for doc in pending_documents %}
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <div>
+                                    <p class="font-medium">
+                                        
+                                            {{ doc.user.name }}
+                                        
+                                    </p>
+                                    <p class="text-sm text-gray-500">{{ doc.document_type|title }}</p>
+                                </div>
+                                
+                                    <a href="{{ url_for('admin.verify_document', doc_id=doc.id) }}" class="text-sm text-blue-600 hover:underline">Review</a>
+                                
+                                
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-center text-gray-500 py-4">No pending documents</p>
+                    {% endif %}
+                </div>
+                <a href="{{ url_for('admin.verify_documents') }}" class="block bg-gray-50 px-6 py-3 text-center text-sm font-medium text-blue-600 hover:bg-gray-100">
+                    View all documents
+                </a>
+            </div>
+
+            <!-- Pending Certifications -->
+            <div class="bg-white rounded-xl shadow-md overflow-hidden border border-yellow-100">
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-medium text-gray-800">Pending Certifications</h3>
+                        <span class="px-2 py-1 rounded-full text-xs bg-yellow-100 text-yellow-800">{{ pending_certifications }}</span>
+                    </div>
+                    {% if pending_certifications > 0 %}
+                        <p class="text-sm text-gray-500 mb-3">{{ pending_certifications }} worker certifications need verification</p>
+                        <div class="bg-yellow-50 p-3 rounded-lg">
+                            <p class="text-sm text-yellow-800">Please verify worker certifications to ensure platform quality</p>
+                        </div>
+                    {% else %}
+                        <p class="text-center text-gray-500 py-4">No pending certifications</p>
+                    {% endif %}
+                </div>
+                <a href="{{ url_for('admin.verify_certifications') }}" class="block bg-gray-50 px-6 py-3 text-center text-sm font-medium text-blue-600 hover:bg-gray-100">
+                    Verify certifications
+                </a>
+            </div>
+
+            <!-- Payment Disputes -->
+            <div class="bg-white rounded-xl shadow-md overflow-hidden border border-red-100">
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-medium text-gray-800">Payment Disputes</h3>
+                        <span class="px-2 py-1 rounded-full text-xs bg-red-100 text-red-800">{{ stats.payments.disputed }}</span>
+                    </div>
+                    {% if stats.payments.disputed > 0 %}
+                        <p class="text-sm text-gray-500 mb-3">{{ stats.payments.disputed }} payments require resolution</p>
+                        <div class="bg-red-50 p-3 rounded-lg">
+                            <p class="text-sm text-red-800">Timely resolution helps maintain trust in the platform</p>
+                        </div>
+                    {% else %}
+                        <p class="text-center text-gray-500 py-4">No payment disputes</p>
+                    {% endif %}
+                </div>
+                <a href="{{ url_for('admin.payment_disputes') }}" class="block bg-gray-50 px-6 py-3 text-center text-sm font-medium text-blue-600 hover:bg-gray-100">
+                    Resolve disputes
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Recent Emergency Alerts -->
+        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="p-6 border-b">
+                <h2 class="text-xl font-semibold flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                    </svg>
+                    Recent Emergency Alerts
+                </h2>
+            </div>
+            <div class="divide-y divide-gray-200">
+                {% if not recent_alerts %}
+                <div class="p-8 text-center text-gray-500">
+                    No recent emergency alerts
+                </div>
+                {% else %}
+                    {% for alerts in recent_alerts|slice(5) %}
+                    <div class="p-4 hover:bg-gray-50 transition">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                {% for alert in alerts %}
+                                <h3 class="font-medium">{{ alert.worker.name }}</h3>
+                                <p class="text-sm text-gray-500">{{ alert.worker.phone }}</p>
+                                
+                                <p class="text-xs text-gray-400 mt-1">
+                                    {{ alert.created_at.strftime('%d %b %Y, %I:%M %p') }}
+                                </p>
+                                
+                                
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span class="px-2 py-1 rounded-full text-xs 
+                                          {% if alert.status == 'active' %}bg-red-100 text-red-800
+                                          {% else %}bg-green-100 text-green-800{% endif %}">
+                                    {{ alert.status|title }}
+                                </span>
+                                {% if alert.status == 'active' %}
+                                <form method="POST" action="{{ url_for('admin.resolve_alert', alert_id=alert.id) }}" class="inline">
+                                    <button type="submit" class="text-xs bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700">
+                                        Resolve
+                                    </button>
+                                </form>
+                                {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            <a href="{{ url_for('admin.emergency_alerts') }}" class="block bg-gray-50 px-6 py-3 text-center text-sm font-medium text-blue-600 hover:bg-gray-100">
+                View all alerts
+            </a>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="p-6 border-b">
+                <h2 class="text-xl font-semibold flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-500 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" />
+                    </svg>
+                    Quick Actions
+                </h2>
+            </div>
+            <div class="grid grid-cols-2 gap-4 p-6">
+                <a href="{{ url_for('admin.add_certification') }}" class="p-4 border rounded-lg hover:bg-blue-50 transition flex flex-col items-center">
+                    <div class="p-2 bg-blue-100 text-blue-600 rounded-full mb-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        </svg>
+                    </div>
+                    <span class="text-sm font-medium text-center">Add Certification</span>
+                </a>
+                <a href="{{ url_for('admin.manage_users') }}" class="p-4 border rounded-lg hover:bg-purple-50 transition flex flex-col items-center">
+                    <div class="p-2 bg-purple-100 text-purple-600 rounded-full mb-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                    </div>
+                    <span class="text-sm font-medium text-center">Manage Users</span>
+                </a>
+                <a href="{{ url_for('admin.analytics_dashboard') }}" class="p-4 border rounded-lg hover:bg-green-50 transition flex flex-col items-center">
+                    <div class="p-2 bg-green-100 text-green-600 rounded-full mb-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                    </div>
+                    <span class="text-sm font-medium text-center">View Analytics</span>
+                </a>
+                <a href="{{ url_for('admin.manage_jobs') }}" class="p-4 border rounded-lg hover:bg-yellow-50 transition flex flex-col items-center">
+                    <div class="p-2 bg-yellow-100 text-yellow-600 rounded-full mb-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                    </div>
+                    <span class="text-sm font-medium text-center">Manage Jobs</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

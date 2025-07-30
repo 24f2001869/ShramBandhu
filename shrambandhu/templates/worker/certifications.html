@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold">My Certifications</h1>
+        <a href="{{ url_for('worker.add_certification') }}"
+           class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+            Add New Certification
+        </a>
+    </div>
+
+    {% if not certifications %}
+    <div class="bg-white rounded-lg shadow-md p-8 text-center text-gray-500">
+        You haven't added any certifications yet
+    </div>
+    {% else %}
+    <div class="grid md:grid-cols-2 gap-6">
+        {% for cert in certifications %}
+        <div class="bg-white rounded-lg shadow-md overflow-hidden border-l-4 
+                   {% if cert.verification_status == 'verified' %}border-green-500
+                   {% elif cert.verification_status == 'rejected' %}border-red-500
+                   {% else %}border-yellow-500{% endif %}">
+            <div class="p-6">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h2 class="text-xl font-bold">{{ cert.certification.name }}</h2>
+                        <p class="text-gray-600">{{ cert.certification.issuing_org }}</p>
+                    </div>
+                    <span class="px-3 py-1 rounded-full text-xs 
+                               {% if cert.verification_status == 'verified' %}bg-green-100 text-green-800
+                               {% elif cert.verification_status == 'rejected' %}bg-red-100 text-red-800
+                               {% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                        {{ cert.verification_status|title }}
+                    </span>
+                </div>
+                
+                <p class="my-3">{{ cert.certification.description }}</p>
+                
+                <div class="flex justify-between text-sm text-gray-500 mt-4">
+                    <div>
+                        <span class="font-medium">Certified:</span>
+                        {{ cert.certified_at.strftime('%d %b %Y') }}
+                    </div>
+                    {% if cert.expires_at %}
+                    <div>
+                        <span class="font-medium">Expires:</span>
+                        {{ cert.expires_at.strftime('%d %b %Y') }}
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="mt-4">
+                    <a href="{{ url_for('worker.uploaded_cert_document', filename= cert.document_path ) }}"
+                       target="_blank"
+                       class="text-blue-600 hover:underline">
+                        View Certificate
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

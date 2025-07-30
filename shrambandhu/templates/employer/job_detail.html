@@ -1,0 +1,255 @@
+{% extends "base.html" %}
+
+{% block title %}Job: {{ job.title }} - ShramBandhu{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    {# --- Job Header --- #}
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 pb-4 border-b border-gray-200">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900 leading-tight">{{ job.title }}</h1>
+            <div class="flex items-center flex-wrap gap-x-3 gap-y-1 mt-2 text-sm text-gray-500">
+                <span>Posted: {{ job.created_at | time_ago }}</span>
+                <span class="text-gray-300">•</span>
+                <span>Type: {{ job.job_type | title }}</span>
+                 {% if job.duration_days %}
+                    <span class="text-gray-300">•</span>
+                    <span>Duration: {{ job.duration_days }} Days</span>
+                 {% endif %}
+                 <span class="text-gray-300">•</span>
+                 <span>Salary: <span class="font-medium text-green-600">₹{{ "%.0f"|format(job.salary) }}</span> / {{ job.salary_frequency | title }}</span>
+            </div>
+        </div>
+        <div class="flex items-center gap-3 flex-shrink-0 w-full md:w-auto">
+             {# Status Badge #}
+             <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium capitalize
+                 {% if job.status == 'active' %} bg-blue-100 text-blue-800
+                 {% elif job.status == 'in-progress' %} bg-yellow-100 text-yellow-800
+                 {% elif job.status == 'completed' %} bg-green-100 text-green-800
+                 {% elif job.status == 'cancelled' %} bg-red-100 text-red-800
+                 {% else %} bg-gray-100 text-gray-800 {% endif %}">
+                 {{ job.status.replace('-', ' ') }}
+             </span>
+            {# Edit Button (only if active) #}
+            {% if job.status == 'active' %}
+            <a href="{{ url_for('employer.edit_job', job_id=job.id) }}"
+               class="inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 shadow-sm">
+                <i class="fas fa-pencil-alt mr-1.5"></i> Edit
+            </a>
+            {% endif %}
+            {# Add Cancel Job button if needed #}
+        </div>
+    </div>
+
+    {# --- Tabs Navigation --- #}
+    <div class="mb-6 border-b border-gray-200">
+        <nav class="-mb-px flex space-x-6 overflow-x-auto" aria-label="Tabs">
+            <button type="button" data-tab-target="details-tab" class="tab-button whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-blue-600 border-blue-500" aria-current="page">
+                Job Details
+            </button>
+            <button type="button" data-tab-target="applications-tab" class="tab-button whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 border-transparent">
+                Applications ({{ job.applications.count() }}) {# Corrected to use count() #}
+            </button>
+             <button type="button" data-tab-target="actions-tab" class="tab-button whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 border-transparent">
+                Status & Actions
+            </button>
+        </nav>
+    </div>
+
+    {# --- Tab Content --- #}
+    <div>
+        {# --- Details Tab --- #}
+        <div id="details-tab" class="tab-content space-y-6">
+             {# Description Card #}
+             <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+                 <h3 class="text-lg font-semibold text-gray-800 mb-2">Description</h3>
+                 <p class="text-gray-700 whitespace-pre-line text-sm leading-relaxed">{{ job.description }}</p>
+             </div>
+
+             {# Skills Card #}
+             {% if job.get_skills_list() %}
+             <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+                 <h3 class="text-lg font-semibold text-gray-800 mb-3">Skills Required</h3>
+                 <div class="flex flex-wrap gap-2">
+                     {% for skill in job.get_skills_list() %}
+                     <span class="inline-flex items-center px-2.5 py-1 rounded-md text-sm font-medium bg-gray-100 text-gray-800">
+                         {{ skill }}
+                     </span>
+                     {% endfor %}
+                 </div>
+             </div>
+             {% endif %}
+
+             {# Location Card #}
+             <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+                 <h3 class="text-lg font-semibold text-gray-800 mb-2">Location</h3>
+                 <p class="text-gray-700 mb-3 text-sm">{{ job.address }}</p>
+                 {% if job.location_lat and job.location_lng %}
+                 <div id="job_location_map" class="leaflet-map-container h-64 z-0 rounded-md"></div> {# Static Map #}
+                 {% else %}
+                 <p class="text-sm text-red-600 italic">Map location not available.</p>
+                 {% endif %}
+            </div>
+        </div>
+
+        {# --- Applications Tab --- #}
+        <div id="applications-tab" class="tab-content hidden">
+             <div class="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden">
+                 <div class="px-6 py-4 border-b border-gray-200">
+                     <h3 class="text-lg font-semibold text-gray-800">Applications Received ({{ job.applications.count() }})</h3>
+                 </div>
+                 {% if not job.applications.count() > 0 %}
+                    <p class="text-gray-600 text-center p-8">No applications received for this job yet.</p>
+                 {% else %}
+                     <ul class="divide-y divide-gray-200">
+                        {# Accepted Application First (if any) #}
+                        {% if accepted_application %}
+                         <li class="p-4 sm:p-6 bg-green-50">
+                            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                <div class="flex items-center gap-4">
+                                     <span class="inline-block h-10 w-10 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
+                                         <svg class="h-full w-full text-gray-300" fill="currentColor" viewBox="0 0 24 24"><path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                                     </span>
+                                     <div>
+                                         <p class="text-sm font-medium text-green-800">{{ accepted_application.worker.name }}</p>
+                                         <p class="text-xs text-green-600">{{ accepted_application.worker.phone }}</p>
+                                         <span class="mt-1 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-200 text-green-900">Accepted / Hired</span>
+                                     </div>
+                                </div>
+                                 <a href="{{ url_for('employer.view_worker', worker_id=accepted_application.worker_id) }}" class="text-xs text-blue-600 hover:underline whitespace-nowrap">View Profile</a>
+                            </div>
+                         </li>
+                        {% endif %}
+
+                        {# Pending Applications #}
+                        {% for application in pending_applications %}
+                          <li class="p-4 sm:p-6 hover:bg-gray-50">
+                            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                <div class="flex items-center gap-4 flex-1 min-w-0">
+                                     <span class="inline-block h-10 w-10 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
+                                         <svg class="h-full w-full text-gray-300" fill="currentColor" viewBox="0 0 24 24"><path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                                     </span>
+                                     <div class="flex-1 min-w-0">
+                                         <p class="text-sm font-medium text-gray-900 truncate">{{ application.worker.name }}</p>
+                                         <p class="text-xs text-gray-500">{{ application.worker.phone }}</p>
+                                         <span class="mt-1 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Pending Review</span>
+                                     </div>
+                                </div>
+                                <div class="flex gap-2 mt-2 sm:mt-0 flex-shrink-0 self-start sm:self-center">
+                                     {% if job.status == 'active' %}
+                                     <form method="POST" action="{{ url_for('employer.application_action', application_id=application.id) }}"> <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/> <input type="hidden" name="action" value="accept"> <button type="submit" class="px-3 py-1 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700">Accept</button> </form>
+                                     <form method="POST" action="{{ url_for('employer.application_action', application_id=application.id) }}"> <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/> <input type="hidden" name="action" value="reject"> <button type="submit" class="px-3 py-1 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">Reject</button> </form>
+                                     {% endif %}
+                                     <a href="{{ url_for('employer.view_worker', worker_id=application.worker_id) }}" class="px-3 py-1 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">Profile</a>
+                                </div>
+                            </div>
+                         </li>
+                        {% endfor %}
+
+                         {# Other Applications (Rejected etc) #}
+                        {% for application in other_applications %}
+                         <li class="p-4 sm:p-6 bg-gray-50 opacity-70">
+                            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                <div class="flex items-center gap-4">
+                                     <span class="inline-block h-10 w-10 rounded-full overflow-hidden bg-gray-200 flex-shrink-0"><svg class="h-full w-full text-gray-400" fill="currentColor" viewBox="0 0 24 24"><path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" /></svg></span>
+                                     <div><p class="text-sm font-medium text-gray-600">{{ application.worker.name }}</p><p class="text-xs text-gray-400">{{ application.worker.phone }}</p><span class="mt-1 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium capitalize {{ 'bg-red-100 text-red-800' if application.status == 'rejected' or application.status == 'withdrawn' else 'bg-gray-100 text-gray-800' }}">{{ application.status }}</span></div>
+                                </div>
+                                 <a href="{{ url_for('employer.view_worker', worker_id=application.worker_id) }}" class="text-xs text-blue-600 hover:underline whitespace-nowrap">View Profile</a>
+                            </div>
+                         </li>
+                        {% endfor %}
+                     </ul>
+                 {% endif %}
+             </div>
+        </div>
+
+         {# --- Actions Tab --- #}
+        <div id="actions-tab" class="tab-content hidden space-y-6">
+             <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+                 <h3 class="text-lg font-semibold text-gray-800 mb-4">Job Status & Actions</h3>
+
+                 {# If In Progress #}
+                 {% if job.status == 'in-progress' and accepted_application %}
+                     <p class="text-sm text-gray-600 mb-4">Job is currently in progress with worker: <a href="{{ url_for('employer.view_worker', worker_id=accepted_application.worker_id) }}" class="font-medium text-blue-600 hover:underline">{{ accepted_application.worker.name }}</a>.</p>
+                      <form method="POST" action="{{ url_for('employer.application_action', application_id=accepted_application.id) }}"> <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/> <input type="hidden" name="action" value="complete"> <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">Mark Job as Completed</button> </form>
+                 {# If Completed #}
+                 {% elif job.status == 'completed' and accepted_application %}
+                     <p class="text-sm text-gray-600 mb-2">Job completed by: <a href="{{ url_for('employer.view_worker', worker_id=accepted_application.worker_id) }}" class="font-medium text-blue-600 hover:underline">{{ accepted_application.worker.name }}</a>.</p>
+                      <div class="border rounded-lg p-4 space-y-4 divide-y divide-gray-100">
+                          {# Payment Status #}
+                          <div> <p class="text-sm font-medium text-gray-700 pt-1">Payment Status</p> {% if payment_status == 'verified' or payment_status == 'completed' %} <p class="mt-1 text-sm text-green-600 flex items-center gap-1"><i class="fas fa-check-circle fa-fw"></i> Paid ({{ payment_status | title }})</p> {% elif payment_status == 'pending' %} <p class="mt-1 text-sm text-yellow-600 flex items-center gap-1"><i class="fas fa-clock fa-fw"></i> Payment Recorded (Pending Worker Verification)</p> {% elif payment_status == 'disputed' %} <p class="mt-1 text-sm text-red-600 flex items-center gap-1"><i class="fas fa-exclamation-triangle fa-fw"></i> Payment Disputed by Worker</p> {% else %} <p class="mt-1 text-sm text-gray-700">Payment action needed.</p> <a href="{{ url_for('employer.initiate_payment', application_id=accepted_application.id) }}" class="mt-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"> Initiate / Record Payment </a> {% endif %} </div>
+                           {# Rating Status #}
+                           <div class="pt-4"> <p class="text-sm font-medium text-gray-700">Rate Worker</p> {% if employer_rating %} <div class="flex items-center text-sm mt-1"> <span class="text-yellow-400 text-lg"> {% for i in range(1, 6) %}{{ '★' if i <= employer_rating.rating else '☆' }}{% endfor %} </span> <span class="ml-2 text-gray-600">({{ employer_rating.rating }}/5 Given)</span> </div> {% if employer_rating.feedback %} <p class="text-xs text-gray-500 italic mt-1 pl-1">"{{ employer_rating.feedback | truncate(100) }}"</p> {% endif %} {% else %} <p class="mt-1 text-sm text-gray-700">You haven't rated the worker yet.</p> <a href="{{ url_for('employer.rate_worker', job_id=job.id) }}" class="mt-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-yellow-500 hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-400"> Rate Worker Now </a> {% endif %} </div>
+                      </div>
+                 {# If Active #}
+                 {% elif job.status == 'active' %}
+                      <p class="text-sm text-gray-600">This job is active and accepting applications. Review applicants in the 'Applications' tab.</p>
+                 {# Other Statuses #}
+                 {% else %}
+                     <p class="text-sm text-gray-600">Job status: {{ job.status | title }}</p>
+                 {% endif %}
+             </div>
+        </div>
+
+    </div> {# End Tab Content #}
+
+</div> {# End Container #}
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+{# Script for Static Map Display #}
+{% if job.location_lat and job.location_lng %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const mapDiv = document.getElementById('job_location_map');
+        if (mapDiv && typeof L !== 'undefined') {
+            const jobLat = {{ job.location_lat }}; const jobLng = {{ job.location_lng }};
+            const jobAddress = {{ job.address | tojson }}; const jobTitle = {{ job.title | tojson }};
+            try {
+                const map = L.map('job_location_map', { scrollWheelZoom: false, dragging: false, zoomControl: true }).setView([jobLat, jobLng], 15);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(map);
+                L.marker([jobLat, jobLng]).addTo(map).bindPopup(`<b>${jobTitle}</b><br>${jobAddress}`).openPopup();
+            } catch (e) { console.error("Map Error:", e); mapDiv.innerHTML = '<p class="text-red-500 text-sm">Error loading map.</p>'; }
+        } else if (mapDiv) { mapDiv.innerHTML = '<p class="text-gray-500 text-sm">Map requires JavaScript and Leaflet library.</p>'; }
+    });
+</script>
+{% endif %}
+
+{# Script for Tab Switching #}
+<script>
+ document.addEventListener('DOMContentLoaded', function() {
+    const tabs = document.querySelectorAll('.tab-button');
+    const tabContents = document.querySelectorAll('.tab-content');
+    const mapInstance = document.getElementById('job_location_map')?._leaflet_map;
+
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const targetId = tab.getAttribute('data-tab-target');
+            const targetContent = document.getElementById(targetId);
+
+            tabContents.forEach(content => { content.classList.add('hidden'); });
+            tabs.forEach(t => { t.classList.remove('text-blue-600', 'border-blue-500'); t.classList.add('text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300', 'border-transparent'); t.setAttribute('aria-current', 'false'); });
+            if (targetContent) { targetContent.classList.remove('hidden'); }
+            tab.classList.add('text-blue-600', 'border-blue-500'); tab.classList.remove('text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300', 'border-transparent'); tab.setAttribute('aria-current', 'page');
+
+            // Invalidate map size if the details tab is now visible and map exists
+            if (targetId === 'details-tab' && mapInstance) {
+                 setTimeout(() => { mapInstance.invalidateSize() }, 10); // Short delay can help rendering
+            }
+        });
+    });
+     // Activate tab based on URL hash
+     if(window.location.hash) {
+         const hash = window.location.hash.substring(1);
+         const targetTabButton = document.querySelector(`.tab-button[data-tab-target='${hash}-tab']`);
+         if(targetTabButton) { targetTabButton.click(); }
+     } else {
+         // Ensure map size is correct if details tab is default and map exists
+         const mapInstance = document.getElementById('job_location_map')?._leaflet_map;
+         if (mapInstance) { setTimeout(() => { mapInstance.invalidateSize() }, 10); }
+     }
+ });
+</script>
+{% endblock %}

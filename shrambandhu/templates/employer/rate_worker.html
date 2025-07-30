@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}Rate Worker - ShramBandhu{% endblock %}
+
+{% block styles %}
+{{ super() }}
+<style>
+    .star-rating { display: flex; align-items: center; }
+    .star-rating input[type="radio"] { display: none; }
+    .star-rating label {
+        font-size: 2.5rem;
+        color: #d1d5db;
+        cursor: pointer;
+        transition: color 0.2s;
+        padding: 0 0.1em;
+    }
+    .star-rating input[type="radio"]:checked ~ label,
+    .star-rating label:hover,
+    .star-rating label:hover ~ label {
+        color: #facc15;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="max-w-xl mx-auto">
+        {# Card Container #}
+        <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-xl border border-gray-200">
+            <div class="mb-6 pb-3 border-b border-gray-200">
+                 <h1 class="text-2xl font-bold text-gray-800">Rate Worker Performance</h1>
+                 {% if worker and job %}
+                 <p class="text-sm text-gray-500 mt-1">Provide feedback for <strong>{{ worker.name }}</strong> on job: <strong>{{ job.title }}</strong></p>
+                 {% endif %}
+            </div>
+
+            {# Worker & Job Summary #}
+            {% if worker and job %}
+            <div class="mb-6 p-4 border rounded-lg bg-gray-50 text-sm space-y-1">
+                <p><strong>Worker:</strong> {{ worker.name }} ({{ worker.phone }})</p>
+                <p><strong>Job:</strong> {{ job.title }}</p>
+                <p><strong>Completed On:</strong> {{ job.updated_at.strftime('%d %b %Y') if job.status == 'completed' else 'N/A' }}</p>
+            </div>
+
+            {# Rating Form #}
+            <form method="POST" action="{{ url_for('employer.rate_worker', job_id=job.id) }}" class="space-y-5" novalidate>
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+                {# Star Rating Input - Updated to match your preferred style #}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Your Rating*</label>
+                    <div class="flex items-center space-x-2">
+                        {% for i in range(1, 6) %}
+                        <input type="radio" id="star{{ i }}" name="rating" value="{{ i }}"
+                               class="hidden peer" {% if existing_rating and existing_rating.rating == i %}checked{% endif %}>
+                        <label for="star{{ i }}" 
+                               class="text-3xl cursor-pointer peer-checked:text-yellow-400 text-gray-300 hover:text-yellow-400">
+                            ★
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                {# Feedback Textarea #}
+                <div>
+                    <label for="feedback" class="block text-sm font-medium text-gray-700 mb-1">Feedback (Optional)</label>
+                    <textarea id="feedback" name="feedback" rows="4"
+                              placeholder="Share details about the worker's performance, punctuality, skills, etc."
+                              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                    >{{ existing_rating.feedback if existing_rating else '' }}</textarea>
+                </div>
+
+                {# Action Buttons #}
+                <div class="pt-5 flex flex-col sm:flex-row gap-4">
+                    <button type="submit" class="w-full sm:w-auto inline-flex justify-center py-2.5 px-6 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out">
+                        {{ 'Update' if existing_rating else 'Submit' }} Rating
+                    </button>
+                    <a href="{{ url_for('employer.view_job', job_id=job.id) }}" class="w-full sm:w-auto inline-flex justify-center py-2.5 px-6 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+            {% else %}
+                <p class="text-red-600 text-center">Could not load worker or job details.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    // Make star ratings interactive - from your preferred example
+    document.querySelectorAll('input[name="rating"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            const stars = document.querySelectorAll('label[for^="star"]');
+            stars.forEach((star, index) => {
+                if (index < this.value) {
+                    star.classList.add('text-yellow-400');
+                    star.classList.remove('text-gray-300');
+                } else {
+                    star.classList.remove('text-yellow-400');
+                    star.classList.add('text-gray-300');
+                }
+            });
+        });
+    });
+    
+    // Initialize stars if existing rating
+    {% if existing_rating %}
+    document.querySelector('input[name="rating"][value="{{ existing_rating.rating }}"]').dispatchEvent(new Event('change'));
+    {% endif %}
+</script>
+{% endblock %}

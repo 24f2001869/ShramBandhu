@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="p-6 bg-blue-600 text-white">
+            <h1 class="text-2xl font-bold">{{ worker.name }}</h1>
+            <p class="text-blue-100">{{ worker.skills }}</p>
+        </div>
+        
+        <div class="p-6">
+            <div class="flex items-center mb-4">
+                {% if worker.average_rating %}
+                <div class="flex items-center">
+                    <span class="text-3xl font-bold mr-2">{{ worker.average_rating }}</span>
+                    <div class="text-yellow-400 text-2xl">
+                        {% for i in range(1, 6) %}
+                            {% if i <= worker.average_rating|int %}
+                                ★
+                            {% else %}
+                                ☆
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    <span class="text-gray-500 ml-2">({{ worker.ratings_count }} ratings)</span>
+                </div>
+                {% else %}
+                <span class="text-gray-500">No ratings yet</span>
+                {% endif %}
+            </div>
+            
+            {% if ratings %}
+            <h2 class="text-xl font-semibold mb-4">Recent Feedback</h2>
+            <div class="space-y-4">
+                {% for rating in ratings %}
+                <div class="border-b pb-4">
+                    <div class="flex justify-between mb-1">
+                        <span class="font-medium">{{ rating.employer.company_name or rating.employer.name }}</span>
+                        <div class="text-yellow-400">
+                            {% for i in range(1, 6) %}
+                                {% if i <= rating.rating %}
+                                    ★
+                                {% else %}
+                                    ☆
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <p class="text-gray-600">{{ rating.feedback }}</p>
+                    <p class="text-sm text-gray-400 mt-1">
+                        {{ rating.created_at.strftime('%d %b %Y') }} • {{ rating.job.title }}
+                    </p>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

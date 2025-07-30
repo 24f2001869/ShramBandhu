@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% from "_formhelpers.html" import render_field %} {# If using forms for rejection reason #}
+
+{% block title %}{{ title or 'Review Document' }} - Admin{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-6 border-b pb-3">
+        <h1 class="text-2xl font-bold text-gray-800">Review Document Verification</h1>
+        <a href="{{ url_for('admin.list_pending_verifications') }}" class="text-sm text-blue-600 hover:underline">&larr; Back to Pending List</a>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="md:col-span-1 bg-white p-6 rounded-lg shadow-md">
+            <h2 class="text-lg font-semibold mb-4">Details</h2>
+            <div class="space-y-2 text-sm">
+                <p><strong>User:</strong> {{ doc.user.name or 'N/A' }} ({{ doc.user.phone }})</p>
+                <p><strong>User Role:</strong> {{ doc.user.role | title }}</p>
+                <p><strong>Document Type:</strong> {{ doc.document_type | replace('_', ' ') | title }}</p>
+                <p><strong>Document Number:</strong> {{ doc.document_number or 'Not Provided' }}</p>
+                <p><strong>Submitted:</strong> {{ doc.created_at.strftime('%d %b %Y, %I:%M %p') }}</p>
+                <p><strong>Current Status:</strong>
+                    <span class="font-medium capitalize px-1.5 py-0.5 rounded text-xs
+                        {% if doc.status == 'verified' %} bg-green-100 text-green-800
+                        {% elif doc.status == 'rejected' %} bg-red-100 text-red-800
+                        {% else %} bg-yellow-100 text-yellow-800 {% endif %}">
+                        {{ doc.status }}
+                    </span>
+                 </p>
+                 {% if doc.status == 'rejected' and doc.rejection_reason %}
+                 <p><strong>Rejection Reason:</strong> {{ doc.rejection_reason }}</p>
+                 {% endif %}
+                 {% if doc.verified_by %}
+                 <p><strong>Reviewed By:</strong> Admin #{{ doc.verified_by }} on {{ doc.verified_at.strftime('%d %b %Y') if doc.verified_at else ''}}</p>
+                 {% endif %}
+            </div>
+
+            {% if doc.status == 'pending' %}
+            <hr class="my-6">
+            <h2 class="text-lg font-semibold mb-4">Actions</h2>
+            <form method="POST" action="{{ url_for('admin.view_verification', doc_id=doc.id) }}" class="space-y-4">
+                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/> {# Add CSRF token #}
+
+                 {# Rejection Reason Field (shown via JS or always visible) #}
+                 <div id="rejection-reason-div" class="hidden">
+                     <label for="rejection_reason" class="block text-sm font-medium text-gray-700 mb-1">Reason for Rejection (Required)</label>
+                     <textarea id="rejection_reason" name="rejection_reason" rows="3"
+                               class="shadow-sm focus:ring-red-500 focus:border-red-500 block w-full sm:text-sm border border-gray-300 rounded-md"
+                               placeholder="Explain why the document is being rejected..."></textarea>
+                 </div>
+
+                 <div class="flex space-x-3">
+                    <button type="submit" name="action" value="approve"
+                            class="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 flex-1">
+                        Approve
+                    </button>
+                    <button type="button" id="reject-button" {# Change type to button initially #}
+                            class="inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 flex-1">
+                        Reject
+                    </button>
+                     {# Hidden submit button for rejection action #}
+                    <button type="submit" name="action" value="reject" id="reject-submit-button" class="hidden"></button>
+                 </div>
+            </form>
+            {% endif %}
+        </div>
+
+        <div class="md:col-span-2 bg-gray-100 p-4 rounded-lg shadow-inner min-h-[60vh] flex items-center justify-center">
+            {% set file_ext = doc.file_path.split('.')[-1].lower() %}
+            {% set file_view_url = url_for('worker.uploaded_document', filename=doc.file_path) %}
+
+            {% if file_ext in ['jpg', 'jpeg', 'png', 'gif', 'webp'] %}
+                <img src="{{ file_view_url }}" alt="Verification Document for {{ doc.user.name or doc.user.phone }}" class="max-w-full max-h-[80vh] object-contain rounded shadow">
+            {% elif file_ext == 'pdf' %}
+                 <iframe src="{{ file_view_url }}" type="application/pdf" class="w-full h-[80vh] border-0" title="{{ doc.document_type }} Document">
+                     <p class="text-center text-gray-600">Your browser does not support embedded PDFs.
+                        <a href="{{ file_view_url }}" target="_blank" class="text-blue-600 hover:underline">Click here to download the PDF</a>.
+                     </p>
+                 </iframe>
+            {% else %}
+                <div class="text-center text-gray-600">
+                    <p class="mb-4">Cannot preview this file type ({{ file_ext }}).</p>
+                    <a href="{{ file_view_url }}" target="_blank"
+                       class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Download Document
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% if doc.status == 'pending' %}
+{% block scripts %}
+{{ super() }}
+<script>
+    const rejectButton = document.getElementById('reject-button');
+    const rejectReasonDiv = document.getElementById('rejection-reason-div');
+    const rejectReasonTextarea = document.getElementById('rejection_reason');
+    const rejectSubmitButton = document.getElementById('reject-submit-button');
+
+    rejectButton.addEventListener('click', () => {
+        // If reason field is hidden, show it and change button text
+        if (rejectReasonDiv.classList.contains('hidden')) {
+            rejectReasonDiv.classList.remove('hidden');
+            rejectReasonTextarea.required = true; // Make reason required
+            rejectButton.textContent = 'Submit Rejection';
+            rejectButton.classList.remove('bg-white', 'text-gray-700', 'hover:bg-gray-50');
+            rejectButton.classList.add('bg-red-600', 'text-white', 'hover:bg-red-700');
+        } else {
+            // If reason field is visible, check if reason is entered and submit
+            if (rejectReasonTextarea.value.trim() === '') {
+                alert('Please provide a reason for rejection.');
+                rejectReasonTextarea.focus();
+            } else {
+                // Trigger the hidden reject submit button
+                 rejectSubmitButton.click();
+            }
+        }
+    });
+</script>
+{% endblock %}
+{% endif %}
+
+{% endblock %}

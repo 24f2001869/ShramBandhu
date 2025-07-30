@@ -1,0 +1,251 @@
+{% extends "base.html" %}
+
+{% block title %}Worker Dashboard - ShramBandhu{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    {# --- Welcome Header --- #}
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">Welcome back, {{ current_user.name or 'Worker' }}!</h1>
+        <p class="text-gray-600 mt-1">Here's your dashboard overview.</p>
+    </div>
+
+     {# --- Location Not Set Warning --- #}
+    {% if not location_set %}
+    <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-6 rounded-md shadow" role="alert">
+      <p class="font-bold">Location Not Set</p>
+      <p>Please <a href="{{ url_for('worker.profile') }}#worker_map" class="font-medium underline hover:text-yellow-800">update your location</a> in your profile to discover jobs near you.</p>
+    </div>
+    {% endif %}
+
+    {# --- Quick Stats Row --- #}
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+        {# Stat Card: Active Applications #}
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-md transition duration-200">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-500">Active Applications</p>
+                    <p class="text-2xl font-bold text-gray-900 mt-1">{{ stats.get('active_applications', 0) }}</p>
+                </div>
+                <div class="bg-blue-100 p-3 rounded-full">
+                     <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+                </div>
+            </div>
+        </div>
+         {# Stat Card: Completed Jobs #}
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-md transition duration-200">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-500">Completed Jobs</p>
+                    <p class="text-2xl font-bold text-gray-900 mt-1">{{ stats.get('completed_jobs', 0) }}</p>
+                </div>
+                 <div class="bg-green-100 p-3 rounded-full">
+                     <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                 </div>
+            </div>
+        </div>
+         {# Stat Card: Rating #}
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-md transition duration-200">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-500">Your Rating</p>
+                    <p class="text-2xl font-bold text-gray-900 mt-1">
+                         {% if stats.get('avg_rating') is not none %}
+                           {{ "%.1f"|format(stats.avg_rating) }} <span class="text-yellow-400 ml-0.5">★</span>
+                        {% else %}
+                           N/A
+                        {% endif %}
+                    </p>
+                </div>
+                 <div class="bg-yellow-100 p-3 rounded-full">
+                      <svg class="w-6 h-6 text-yellow-600" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                 </div>
+            </div>
+        </div>
+        {# *** NEW Stat Card: Profile Views *** #}
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-md transition duration-200">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-500">Profile Views</p>
+                    <p class="text-2xl font-bold text-gray-900 mt-1">{{ profile_views_count | default(0) }}</p>
+                </div>
+                 <div class="bg-purple-100 p-3 rounded-full"> {# Changed color #}
+                     <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                 </div>
+            </div>
+        </div>
+         {# ********************************** #}
+         
+         {# Stat Card: Verified Certs #}
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-md transition duration-200">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-500">Verified Certs</p>
+                    <p class="text-2xl font-bold text-gray-900 mt-1">{{ stats.get('verified_certs', 0) }}</p>
+                </div>
+                 <div class="bg-indigo-100 p-3 rounded-full">
+                      <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path></svg>
+                 </div>
+            </div>
+        </div>
+    </div>
+
+    {# --- Main Content Grid (2 Columns) --- #}
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+        {# --- Wider Column (Jobs, Actions) --- #}
+        <div class="lg:col-span-2 space-y-8">
+
+             {# Jobs Near You Card #}
+            <div class="bg-white rounded-xl shadow-md border border-gray-200">
+                <div class="flex justify-between items-center px-6 py-4 border-b border-gray-200">
+                    <h2 class="text-xl font-semibold text-gray-800">Jobs Near You</h2>
+                     <a href="{{ url_for('worker.find_jobs') }}" class="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline">
+                         Find More Jobs &rarr;
+                     </a>
+                </div>
+                 <div class="p-6">
+                     {% if not location_set %}
+                         <p class="text-gray-600 text-center py-6">Set your location in your <a href="{{ url_for('worker.profile') }}" class="text-blue-600 underline">profile</a> to see nearby jobs.</p>
+                     {% elif nearby_jobs %}
+                         <ul class="space-y-5">
+                             {% for job in nearby_jobs %} {# Shows limited jobs passed from route #}
+                             <li class="border rounded-lg p-4 hover:bg-gray-50 transition duration-200 ease-in-out shadow-sm flex flex-col sm:flex-row justify-between items-start gap-4">
+                                 <div class="flex-1 min-w-0">
+                                     <h3 class="font-semibold text-base text-gray-800 truncate">{{ job.title }}</h3>
+                                     <p class="text-sm text-gray-500 mt-1">{{ job.employer.org_name or job.employer.name or 'Private Employer'}}</p>
+                                     <p class="text-sm text-gray-500 mt-1 flex items-center gap-1 text-ellipsis overflow-hidden whitespace-nowrap">
+                                         <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                         {{ job.address | truncate(40) if job.address else 'Location Available' }}
+                                         {% if job.distance is defined %}
+                                            <span class="text-gray-400 ml-1"> (~{{ "%.1f"|format(job.distance) }} km)</span>
+                                         {% endif %}
+                                     </p>
+                                 </div>
+                                 <div class="text-left sm:text-right flex-shrink-0 w-full sm:w-auto mt-2 sm:mt-0">
+                                     <p class="text-green-600 font-bold text-base">₹{{ "%.0f"|format(job.salary) }} <span class="text-xs text-gray-500 font-normal capitalize">/ {{ job.salary_frequency }}</span></p>
+                                     {# Apply Button Form #}
+                                     <form method="POST" action="{{ url_for('worker.apply', job_id=job.id) }}" class="mt-2">
+                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                         {% set application = current_user.worker_applications.filter_by(job_id=job.id).first() %}
+                                         {% if application %}
+                                             <span class="inline-block text-xs px-2 py-1 rounded bg-gray-100 text-gray-600 font-medium">Applied</span>
+                                         {% else %}
+                                             <button type="submit" class="text-xs bg-blue-600 text-white px-3 py-1.5 rounded-md hover:bg-blue-700 transition duration-200 ease-in-out shadow-sm">Apply</button>
+                                         {% endif %}
+                                     </form>
+                                 </div>
+                             </li>
+                             {% endfor %}
+                         </ul>
+                     {% else %}
+                          <p class="text-gray-600 text-center py-6">No active jobs found near your location matching your skills.</p>
+                     {% endif %}
+                 </div>
+            </div> {# End Jobs Card #}
+
+            {# Maybe add Active Applications Summary Card here if needed #}
+
+        </div> {# End Wider Column #}
+
+        {# --- Narrower Column (Profile, Verification, Payments, SOS) --- #}
+        <div class="lg:col-span-1 space-y-6">
+
+            {# Profile Completion Card #}
+             <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+                 <h3 class="text-lg font-semibold text-gray-800 mb-3">Your Profile</h3>
+                 <div class="mb-3">
+                     <div class="flex justify-between mb-1 text-xs">
+                         <span class="text-gray-600">Completion</span>
+                         <span class="font-medium text-blue-600">{{ profile_completion }}%</span>
+                     </div>
+                     <div class="w-full bg-gray-200 rounded-full h-2">
+                         <div class="bg-blue-600 h-2 rounded-full" style="width: {{ profile_completion }}%"></div>
+                     </div>
+                 </div>
+                 <a href="{{ url_for('worker.profile') }}" class="block w-full text-center bg-gray-100 hover:bg-gray-200 text-gray-800 py-2 px-4 rounded-lg text-sm font-medium transition duration-200">
+                     View & Edit Profile
+                 </a>
+             </div>
+
+             {# Verification Status Card #}
+              <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+                  <h3 class="text-lg font-semibold text-gray-800 mb-3">Verification Status</h3>
+                    {% if verification_summary.is_fully_verified %}
+                        <p class="text-sm text-green-600 mb-3 flex items-center"><i class="fas fa-check-circle mr-2"></i> Profile Verified</p>
+                    {% elif verification_summary.pending_docs > 0 or verification_summary.pending_certs > 0 %}
+                         <p class="text-sm text-yellow-600 mb-1"><i class="fas fa-clock mr-2"></i> Review Pending:</p>
+                         <ul class="text-xs text-yellow-700 list-disc list-inside mb-3">
+                             {% if verification_summary.pending_docs > 0 %}<li>{{ verification_summary.pending_docs }} Document(s)</li>{% endif %}
+                             {% if verification_summary.pending_certs > 0 %}<li>{{ verification_summary.pending_certs }} Certification(s)</li>{% endif %}
+                         </ul>
+                    {% elif verification_summary.rejected_docs > 0 %}
+                         <p class="text-sm text-red-600 mb-3 flex items-center"><i class="fas fa-times-circle mr-2"></i> Action Required: {{ verification_summary.rejected_docs }} document(s) rejected.</p>
+                    {% else %}
+                         <p class="text-sm text-gray-600 mb-3">Upload documents to get verified.</p>
+                    {% endif %}
+
+                  <a href="{{ url_for('worker.upload_document') }}" class="block w-full text-center bg-blue-100 hover:bg-blue-200 text-blue-700 py-2 px-4 rounded-lg text-sm font-medium transition duration-200 mb-2">
+                      Manage Documents
+                  </a>
+                   <a href="{{ url_for('worker.my_certifications') }}" class="block w-full text-center bg-indigo-100 hover:bg-indigo-200 text-indigo-700 py-2 px-4 rounded-lg text-sm font-medium transition duration-200">
+                      Manage Certifications
+                  </a>
+              </div>
+
+             {# Recent Payments Card #}
+             <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+                 <div class="flex justify-between items-center mb-3">
+                    <h3 class="text-lg font-semibold text-gray-800">Recent Payments</h3>
+                    <a href="{{ url_for('worker.payment_history') }}" class="text-xs font-medium text-blue-600 hover:underline">View All</a>
+                 </div>
+                 {% if recent_payments %}
+                     <ul class="space-y-3">
+                         {% for payment in recent_payments %}
+                         <li class="flex justify-between items-center text-sm border-b border-gray-100 pb-2 last:border-b-0 last:pb-0">
+                             <div>
+                                 <p class="text-gray-700 font-medium truncate">{{ payment.job.title }}</p>
+                                 <p class="text-xs text-gray-500">From: {{ payment.employer.org_name or payment.employer.name | truncate(20) }}</p>
+                             </div>
+                             <span class="font-medium text-green-600 flex-shrink-0 pl-2">₹{{ "%.0f"|format(payment.amount) }}</span>
+                         </li>
+                         {% endfor %}
+                     </ul>
+                 {% else %}
+                     <p class="text-sm text-gray-500 text-center py-4">No recent payments.</p>
+                 {% endif %}
+             </div>
+
+             {# Emergency Card #}
+             <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 text-center">
+                  <h3 class="text-lg font-semibold text-gray-800 mb-3">Emergency</h3>
+                  <button id="sos-button" class="w-full bg-red-100 text-red-700 border border-red-300 py-3 px-4 rounded-lg hover:bg-red-200 transition duration-300 mb-2 text-center font-bold flex items-center justify-center gap-2">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                      SEND SOS ALERT
+                  </button>
+                  <a href="{{ url_for('worker.emergency_resources') }}" class="text-xs text-blue-600 hover:underline">
+                     View Emergency Contacts & Resources
+                 </a>
+             </div>
+
+        </div> {# End Narrower Column #}
+
+    </div> {# End Main Content Grid #}
+
+    {# --- Fixed SOS Button (keep separate for visibility) --- #}
+    <button id="sos-button-fixed"
+            class="fixed bottom-6 right-6 bg-red-600 text-white p-3 rounded-full shadow-lg hover:bg-red-700 transition transform hover:scale-110 z-50 flex items-center justify-center">
+       <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+        <span class="sr-only">SOS</span> {# Keep text hidden unless needed #}
+    </button>
+
+</div> {# End Container #}
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+{# Keep existing SOS script link/inclusion #}
+<script src="{{ url_for('static', filename='js/sos.js') }}"></script>
+{# Add any other dashboard specific JS if needed #}
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% from "_formhelpers.html" import render_field %}
+
+{% block title %}Verify OTP - ShramBandhu{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gray-50">
+     <div class="max-w-md w-full space-y-8">
+        {# Card container #}
+        <div class="bg-white p-8 rounded-2xl shadow-xl border border-gray-200">
+            <div>
+                <h2 class="mt-2 text-center text-3xl font-extrabold text-gray-900">
+                    Verify Your Phone
+                </h2>
+                 <p class="mt-2 text-center text-sm text-gray-600">
+                     An OTP has been sent to <strong>{{ phone or session.get('otp_login_phone', 'your phone') }}</strong>.
+                     <br>Please enter it below.
+                 </p>
+            </div>
+            <form class="mt-8 space-y-5" method="POST" novalidate> {# No action needed, submits to current URL #}
+                 {{ form.hidden_tag() }}
+                 {{ render_field(form.otp, placeholder="Enter 4 or 6 digit OTP", autofocus=true, inputmode="numeric", pattern="[0-9]*", autocomplete="one-time-code") }}
+
+                 {# Resend OTP link/button #}
+                 <div class="text-sm text-center">
+                    <a href="#" class="font-medium text-blue-600 hover:text-blue-500 disabled:opacity-50" id="resend-otp-link">
+                        Resend OTP
+                    </a>
+                     <span id="resend-timer" class="text-gray-500 hidden ml-2"></span>
+                </div>
+
+                <div>
+                    <button type="submit" class="group relative w-full flex justify-center py-2.5 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out">
+                        Verify OTP
+                    </button>
+                </div>
+            </form>
+            <div class="text-sm text-center mt-6">
+                <a href="{{ url_for('auth.login_otp') }}" class="font-medium text-gray-500 hover:text-gray-700">
+                    « Use a different phone number
+                </a>
+            </div>
+         </div> {# End Card #}
+     </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }} {# Include scripts from base.html #}
+<script>
+    // Keep the Resend Timer JavaScript from the previous version here
+    const resendLink = document.getElementById('resend-otp-link');
+    const timerSpan = document.getElementById('resend-timer');
+    let countdown = 60; // seconds
+
+    function startTimer() { /* ... Timer logic ... */ }
+    resendLink.addEventListener('click', (e) => { /* ... Resend logic placeholder ... */ });
+    // startTimer(); // Uncomment if you want timer on page load
+</script>
+{% endblock %}

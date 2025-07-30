@@ -1,0 +1,188 @@
+{# shrambandhu/templates/index.html (Redesigned + Image Placeholders) #}
+{% extends "base.html" %}
+
+{% block title %}ShramBandhu - Connect Workers & Employers{% endblock %}
+
+{% block content %}
+
+{# --- Hero Section --- #}
+<section class="relative bg-gradient-to-r from-blue-600 to-indigo-700 text-white overflow-hidden">
+    {# --- Background Image Placeholder ---
+         To use, uncomment the img tag and replace the filename.
+         Ensure the image is in static/images folder.
+         Adjust opacity div as needed.
+    #}
+    <div class="absolute inset-0 bg-black opacity-40 z-0"></div> {# Overlay for text readability #}
+    {#
+    <img src="{{ url_for('static', filename='images/hero-background-construction.jpg') }}"
+         alt="Construction site background"
+         class="absolute inset-0 w-full h-full object-cover z-0">
+    #}
+
+    <div class="relative container mx-auto px-4 sm:px-6 lg:px-8 py-24 md:py-32 text-center z-10">
+        <h1 class="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight mb-4 leading-tight drop-shadow-md">
+            Connecting Skilled Labour <br class="hidden sm:inline">with Opportunity.
+        </h1>
+        <p class="text-lg sm:text-xl text-blue-100 max-w-3xl mx-auto mb-8 drop-shadow">
+            India's trusted platform for construction workers and employers. Find verified jobs or hire reliable talent, hassle-free.
+        </p>
+        <div class="flex flex-col sm:flex-row justify-center items-center gap-4">
+            <a href="{{ url_for('auth.register', role='worker') }}"
+               class="w-full sm:w-auto inline-block px-8 py-3 bg-white text-blue-600 font-semibold rounded-lg shadow-md hover:bg-gray-100 transition duration-200 ease-in-out transform hover:-translate-y-0.5">
+                I'm Looking for Work
+            </a>
+            <a href="{{ url_for('auth.register', role='employer') }}"
+               class="w-full sm:w-auto inline-block px-8 py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg shadow-md transition duration-200 ease-in-out transform hover:-translate-y-0.5">
+                I Need to Hire Workers
+            </a>
+        </div>
+    </div>
+</section>
+
+{# --- How It Works Section --- #}
+<section id="how-it-works" class="py-16 lg:py-24 bg-gray-50">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12 lg:mb-16">
+            <h2 class="text-3xl lg:text-4xl font-bold text-gray-800">How ShramBandhu Works</h2>
+            <p class="mt-3 text-lg text-gray-600 max-w-2xl mx-auto">Simple steps to connect and get work done.</p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
+            {# Step 1 #}
+            <div class="text-center p-6 bg-white rounded-lg shadow-sm border border-gray-100">
+                <div class="flex items-center justify-center h-16 w-16 rounded-full bg-blue-100 text-blue-600 mx-auto mb-4">
+                     <i class="fas fa-user-plus text-2xl"></i>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-800 mb-2">1. Register & Verify</h3>
+                <p class="text-sm text-gray-600">Quickly sign up using mobile, email or Google. Complete verification for trust & safety.</p>
+            </div>
+            {# Step 2 #}
+            <div class="text-center p-6 bg-white rounded-lg shadow-sm border border-gray-100">
+                 <div class="flex items-center justify-center h-16 w-16 rounded-full bg-blue-100 text-blue-600 mx-auto mb-4">
+                    <i class="fas fa-briefcase text-2xl"></i>
+                 </div>
+                <h3 class="text-lg font-semibold text-gray-800 mb-2">2. Post or Find Jobs</h3>
+                <p class="text-sm text-gray-600">Employers post job requirements with location and skills. Workers find relevant jobs nearby.</p>
+            </div>
+             {# Step 3 #}
+             <div class="text-center p-6 bg-white rounded-lg shadow-sm border border-gray-100">
+                 <div class="flex items-center justify-center h-16 w-16 rounded-full bg-blue-100 text-blue-600 mx-auto mb-4">
+                     <i class="fas fa-handshake text-2xl"></i>
+                 </div>
+                <h3 class="text-lg font-semibold text-gray-800 mb-2">3. Connect & Work</h3>
+                <p class="text-sm text-gray-600">Workers apply directly. Employers review applications and hire. Manage work easily.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+{# --- Features Section --- #}
+<section id="features" class="py-16 lg:py-24 bg-white">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12 lg:mb-16">
+            <h2 class="text-3xl lg:text-4xl font-bold text-gray-800">Platform Features</h2>
+            <p class="mt-3 text-lg text-gray-600 max-w-2xl mx-auto">Built for the needs of the construction sector.</p>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {# Feature Card 1 #}
+            <div class="bg-gray-50 p-6 rounded-lg shadow-sm hover:shadow-lg transition duration-300 ease-in-out border border-transparent hover:border-blue-200">
+                 <div class="text-blue-600 text-3xl mb-4"> <i class="fas fa-map-marked-alt"></i> </div>
+                 <h3 class="text-xl font-semibold mb-2 text-gray-800">Location-Based Matching</h3>
+                 <p class="text-gray-600 text-sm">Find jobs or workers in your vicinity using precise map integration.</p>
+            </div>
+             {# Feature Card 2 #}
+            <div class="bg-gray-50 p-6 rounded-lg shadow-sm hover:shadow-lg transition duration-300 ease-in-out border border-transparent hover:border-blue-200">
+                  <div class="text-blue-600 text-3xl mb-4"> <i class="fas fa-user-check"></i> </div>
+                 <h3 class="text-xl font-semibold mb-2 text-gray-800">Verified Profiles</h3>
+                 <p class="text-gray-600 text-sm">Mandatory document verification builds trust and ensures authenticity.</p>
+            </div>
+             {# Feature Card 3 #}
+            <div class="bg-gray-50 p-6 rounded-lg shadow-sm hover:shadow-lg transition duration-300 ease-in-out border border-transparent hover:border-blue-200">
+                  <div class="text-blue-600 text-3xl mb-4"> <i class="fas fa-shield-alt"></i> </div>
+                 <h3 class="text-xl font-semibold mb-2 text-gray-800">Secure Payments & Ratings</h3>
+                 <p class="text-gray-600 text-sm">Integrated payment options with dispute resolution. Mutual ratings foster accountability.</p>
+            </div>
+             {# Feature Card 4 #}
+            <div class="bg-gray-50 p-6 rounded-lg shadow-sm hover:shadow-lg transition duration-300 ease-in-out border border-transparent hover:border-blue-200">
+                 <div class="text-blue-600 text-3xl mb-4"> <i class="fas fa-microphone-alt"></i> </div>
+                 <h3 class="text-xl font-semibold mb-2 text-gray-800">Voice & IVR Access</h3>
+                 <p class="text-gray-600 text-sm">Workers can register using voice commands or via a simple phone call, breaking the digital divide.</p>
+            </div>
+             {# Feature Card 5 #}
+            <div class="bg-gray-50 p-6 rounded-lg shadow-sm hover:shadow-lg transition duration-300 ease-in-out border border-transparent hover:border-blue-200">
+                 <div class="text-blue-600 text-3xl mb-4"> <i class="fas fa-certificate"></i> </div>
+                 <h3 class="text-xl font-semibold mb-2 text-gray-800">Skill Certifications</h3>
+                 <p class="text-gray-600 text-sm">Upload verified skill certificates (e.g., NSDC) to increase credibility and job prospects.</p>
+            </div>
+             {# Feature Card 6 #}
+             <div class="bg-gray-50 p-6 rounded-lg shadow-sm hover:shadow-lg transition duration-300 ease-in-out border border-transparent hover:border-blue-200">
+                  <div class="text-blue-600 text-3xl mb-4"> <i class="fas fa-first-aid"></i> </div>
+                 <h3 class="text-xl font-semibold mb-2 text-gray-800">Emergency SOS</h3>
+                 <p class="text-gray-600 text-sm">Integrated SOS alerts nearby admins/responders with the worker's location in emergencies.</p>
+             </div>
+        </div>
+    </div>
+</section>
+
+{# --- Testimonials Section --- #}
+<section class="py-16 lg:py-24 bg-gradient-to-r from-gray-50 to-gray-100">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 class="text-3xl lg:text-4xl font-bold text-center mb-12 lg:mb-16 text-gray-800">Trusted by Workers and Employers</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
+            {# Testimonial Card 1 #}
+            <div class="bg-white p-6 rounded-lg shadow-lg border border-gray-200 flex flex-col">
+                <blockquote class="text-gray-600 italic relative pl-5 mb-4 flex-grow">
+                     <span class="absolute left-0 -top-1 text-6xl text-gray-200 font-serif -z-10">&ldquo;</span>
+                     ShramBandhu made finding daily work so much easier. I get regular job alerts near my home, and the payments are always on time. Highly recommend!
+                </blockquote>
+                 <div class="flex items-center mt-auto pt-4 border-t border-gray-100">
+                     {# Placeholder Image #}
+                    <img src="https://via.placeholder.com/48/808080/FFFFFF?text=R" alt="Ramesh Patel" class="w-12 h-12 rounded-full bg-gray-200 mr-4 flex-shrink-0 object-cover">
+                    {# <img src="{{ url_for('static', filename='images/testimonial-worker.jpg') }}" alt="Ramesh Patel" class="w-12 h-12 rounded-full mr-4 flex-shrink-0 object-cover"> #}
+                    <div>
+                        <h4 class="font-semibold text-gray-800">Ramesh Patel</h4>
+                        <p class="text-sm text-gray-500">Electrician, Hyderabad</p>
+                    </div>
+                </div>
+            </div>
+             {# Testimonial Card 2 #}
+             <div class="bg-white p-6 rounded-lg shadow-lg border border-gray-200 flex flex-col">
+                 <blockquote class="text-gray-600 italic relative pl-5 mb-4 flex-grow">
+                     <span class="absolute left-0 -top-1 text-6xl text-gray-200 font-serif -z-10">&ldquo;</span>
+                     Finding verified and skilled masons used to take days. With ShramBandhu, we hired a reliable team in just a few hours. The verification helps a lot.
+                </blockquote>
+                <div class="flex items-center mt-auto pt-4 border-t border-gray-100">
+                    {# Placeholder Image #}
+                     <img src="https://via.placeholder.com/48/4ade80/FFFFFF?text=P" alt="Priya Constructions" class="w-12 h-12 rounded-full bg-green-100 mr-4 flex-shrink-0 object-cover">
+                     {# <img src="{{ url_for('static', filename='images/testimonial-employer.jpg') }}" alt="Priya Constructions" class="w-12 h-12 rounded-full mr-4 flex-shrink-0 object-cover"> #}
+                    <div>
+                        <h4 class="font-semibold text-gray-800">Priya Constructions</h4>
+                        <p class="text-sm text-gray-500">Contractor, Telangana</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+{# --- Final Call to Action --- #}
+<section class="py-16 lg:py-24 bg-blue-700 text-white">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h2 class="text-3xl lg:text-4xl font-bold mb-6">Ready to Build a Better Future?</h2>
+        <p class="text-lg text-blue-100 max-w-2xl mx-auto mb-8">
+            Join thousands of skilled workers and reputable employers benefiting from ShramBandhu today.
+        </p>
+        <div class="flex flex-col sm:flex-row justify-center items-center gap-4">
+            <a href="{{ url_for('auth.register', role='worker') }}"
+               class="w-full sm:w-auto inline-block px-8 py-3 bg-white text-blue-700 font-semibold rounded-lg shadow-md hover:bg-gray-100 transition duration-200 ease-in-out transform hover:-translate-y-0.5">
+                Find Work Now
+            </a>
+            <a href="{{ url_for('auth.register', role='employer') }}"
+               class="w-full sm:w-auto inline-block px-8 py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg shadow-md transition duration-200 ease-in-out transform hover:-translate-y-0.5">
+                Hire Skilled Workers
+            </a>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

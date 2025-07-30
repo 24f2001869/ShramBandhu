@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}{{ worker.name }}'s Profile - ShramBandhu{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+
+        {# Profile Header #}
+        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 md:p-8 border-b border-gray-200">
+            <div class="flex flex-col sm:flex-row items-center gap-4 md:gap-6">
+                 {# Placeholder Avatar #}
+                 <span class="inline-block h-20 w-20 sm:h-24 sm:w-24 rounded-full overflow-hidden bg-gray-200 flex-shrink-0 border-4 border-white shadow">
+                    <svg class="h-full w-full text-gray-400" fill="currentColor" viewBox="0 0 24 24"><path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                 </span>
+                 <div class="text-center sm:text-left">
+                     <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">{{ worker.name or 'Worker Profile' }}</h1>
+                     {# Basic Info #}
+                     <div class="flex flex-wrap justify-center sm:justify-start items-center gap-x-4 gap-y-1 mt-2 text-sm text-gray-600">
+                         {% if worker.phone %}
+                         <span><i class="fas fa-phone-alt fa-fw text-gray-400 mr-1"></i> {{ worker.phone }} {% if worker.is_phone_verified %}<i class="fas fa-check-circle text-green-500 ml-1" title="Verified"></i>{% endif %}</span>
+                         {% endif %}
+                         {% if worker.email %}
+                         <span><i class="fas fa-envelope fa-fw text-gray-400 mr-1"></i> {{ worker.email }} {% if worker.is_email_verified %}<i class="fas fa-check-circle text-green-500 ml-1" title="Verified"></i>{% endif %}</span>
+                         {% endif %}
+                          <span><i class="fas fa-map-marker-alt fa-fw text-gray-400 mr-1"></i> {{ worker.location_address | truncate(40) if worker.location_address else 'Location not set' }}</span>
+                     </div>
+                      {# Rating #}
+                      {% set avg_rating = worker.average_rating %}
+                      {% if avg_rating is not none %}
+                      <div class="mt-2 flex justify-center sm:justify-start items-center gap-1">
+                           <span class="text-yellow-400 text-lg">
+                               {% for i in range(1, 6) %}{{ '★' if i <= avg_rating else '☆' }}{% endfor %}
+                           </span>
+                          <span class="text-sm text-gray-500">({{ avg_rating }}/5 from {{ worker.ratings_count }} reviews)</span>
+                      </div>
+                      {% endif %}
+                 </div>
+            </div>
+        </div>
+
+         {# Profile Details Body #}
+         <div class="p-6 md:p-8 space-y-6">
+
+             {# Skills & Experience #}
+             <div class="border rounded-lg p-4 bg-gray-50">
+                  <h3 class="text-base font-semibold text-gray-800 mb-2">Skills & Experience</h3>
+                  {% if worker.get_skills_list() %}
+                     <div class="flex flex-wrap gap-2 mb-3">
+                         {% for skill in worker.get_skills_list() %}
+                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-sm font-medium bg-blue-100 text-blue-800">
+                             {{ skill }}
+                         </span>
+                         {% endfor %}
+                     </div>
+                  {% else %}
+                     <p class="text-sm text-gray-500 mb-3 italic">No skills listed.</p>
+                  {% endif %}
+                  {% if worker.experience_years is not none %}
+                    <p class="text-sm text-gray-700">Experience: <span class="font-medium">{{ worker.experience_years }}+ years</span></p>
+                  {% endif %}
+             </div>
+
+             {# Verified Certifications #}
+             {% set verified_certs = worker.worker_certifications.filter_by(verification_status='verified').all() %}
+             {% if verified_certs %}
+             <div class="border rounded-lg p-4 bg-gray-50">
+                  <h3 class="text-base font-semibold text-gray-800 mb-2">Verified Certifications</h3>
+                  <ul class="space-y-1 list-disc list-inside pl-1">
+                      {% for wc in verified_certs %}
+                      <li class="text-sm text-gray-700">
+                          <span class="font-medium">{{ wc.certification.name }}</span> ({{ wc.certification.issuing_org }})
+                           {% if wc.expires_at %} <span class="text-xs text-red-600">(Expires: {{ wc.expires_at.strftime('%b %Y') }})</span> {% endif %}
+                           <a href="{{ url_for('worker.uploaded_cert_document', filename=wc.document_path) }}" target="_blank" class="ml-2 text-blue-500 text-xs hover:underline">(View Proof)</a>
+                      </li>
+                      {% endfor %}
+                  </ul>
+             </div>
+             {% endif %}
+
+            {# Previous Job History with this Employer #}
+            {% if collaborated_jobs %}
+            <div class="border rounded-lg p-4 bg-gray-50">
+                <h3 class="text-base font-semibold text-gray-800 mb-2">Work History (With You)</h3>
+                <ul class="space-y-2">
+                    {% for job, app in collaborated_jobs[:5] %} {# Show recent 5 #}
+                    <li class="text-sm border-b border-gray-200 pb-2 last:border-0 last:pb-0">
+                        <a href="{{ url_for('employer.view_job', job_id=job.id) }}" class="font-medium text-blue-600 hover:underline">{{ job.title }}</a>
+                        <span class="text-xs text-gray-500 ml-2">({{ job.status | title }} - {{ app.applied_at.strftime('%b %Y') }})</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            {# Recent Feedback/Ratings #}
+             <div class="border rounded-lg p-4 bg-gray-50">
+                 <h3 class="text-base font-semibold text-gray-800 mb-3">Recent Feedback</h3>
+                  {% if ratings %}
+                     <ul class="space-y-4">
+                         {% for rating in ratings %}
+                         <li class="text-sm border-b border-gray-200 pb-3 last:border-0 last:pb-0">
+                              <div class="flex items-center justify-between mb-1">
+                                   <span class="font-medium text-gray-700">
+                                       Rated by: {{ rating.employer.org_name or rating.employer.name or 'Employer' }}
+                                   </span>
+                                   <span class="text-yellow-400 text-base">
+                                      {% for i in range(1, 6) %}{{ '★' if i <= rating.rating else '☆' }}{% endfor %}
+                                   </span>
+                              </div>
+                              {% if rating.feedback %}
+                              <p class="text-gray-600 italic text-xs">"{{ rating.feedback }}"</p>
+                              {% endif %}
+                              <p class="text-xs text-gray-400 mt-1">For job: {{ rating.job.title | truncate(40) }} - {{ rating.created_at | time_ago }}</p>
+                         </li>
+                         {% endfor %}
+                     </ul>
+                  {% else %}
+                     <p class="text-sm text-gray-500 italic">No feedback received yet.</p>
+                  {% endif %}
+             </div>
+         </div>
+    </div>
+</div>
+{% endblock %}

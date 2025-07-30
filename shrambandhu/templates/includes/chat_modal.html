@@ -1,0 +1,94 @@
+<div id="chat-modal" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-black bg-opacity-50"></div>
+    <div class="relative max-w-md mx-auto my-12 bg-white rounded-lg shadow-xl">
+        <!-- Header -->
+        <div class="px-6 py-4 border-b flex justify-between items-center bg-blue-600 text-white rounded-t-lg">
+            <h3 class="text-lg font-bold">Voice Call</h3>
+            <button id="close-chat" class="text-white hover:text-gray-200">
+                ✕
+            </button>
+        </div>
+        
+        <!-- Call Content -->
+        <div class="p-6">
+            <div id="call-status" class="text-center mb-4">
+                <p>Connecting...</p>
+            </div>
+            
+            <div id="remote-audio" class="mb-4"></div>
+            
+            <div class="flex justify-center space-x-4">
+                <button id="end-call" 
+                        class="bg-red-600 text-white p-3 rounded-full hover:bg-red-700">
+                    End Call
+                </button>
+                <button id="mute-call" 
+                        class="bg-gray-600 text-white p-3 rounded-full hover:bg-gray-700">
+                    Mute
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://sdk.twilio.com/js/video/releases/2.3.0/twilio-video.min.js"></script>
+<script>
+    let activeCall = null;
+    
+    // Initialize modal
+    document.getElementById('close-chat').addEventListener('click', () => {
+        document.getElementById('chat-modal').classList.add('hidden');
+        if (activeCall) {
+            activeCall.disconnect();
+        }
+    });
+    
+    // Start call function (to be called from other scripts)
+    function startVoiceCall(recipientId, recipientName) {
+        const modal = document.getElementById('chat-modal');
+        modal.classList.remove('hidden');
+        
+        document.getElementById('call-status').innerHTML = `
+            <p>Calling ${recipientName}...</p>
+        `;
+        
+        // Get Twilio token
+        fetch('/chat/token')
+            .then(res => res.json())
+            .then(data => {
+                // Connect to Twilio
+                Twilio.Video.connect(data.token, {
+                    name: 'voice-call-room',
+                    audio: true,
+                    video: false
+                }).then(room => {
+                    activeCall = room;
+                    
+                    room.on('participantConnected', participant => {
+                        document.getElementById('call-status').innerHTML = `
+                            <p>In call with ${recipientName}</p>
+                        `;
+                        
+                        participant.tracks.forEach(publication => {
+                            if (publication.isSubscribed) {
+                                const track = publication.track;
+                                document.getElementById('remote-audio').appendChild(track.attach());
+                            }
+                        });
+                    });
+                    
+                    room.on('disconnected', () => {
+                        modal.classList.add('hidden');
+                    });
+                });
+            });
+    }
+    
+    // End call button
+    document.getElementById('end-call').addEventListener('click', () => {
+        if (activeCall) {
+            activeCall.disconnect();
+            document.getElementById('chat-modal').classList.add('hidden');
+        }
+    });
+</script>

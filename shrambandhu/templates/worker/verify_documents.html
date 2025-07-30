@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-xl mx-auto bg-white shadow-md rounded-lg p-6">
+    <h2 class="text-2xl font-bold mb-4">Verify Document</h2>
+    <form method="POST" enctype="multipart/form-data">
+        <div class="mb-4">
+            <label for="document_type" class="block text-sm font-medium">Document Type</label>
+            <input type="text" name="document_type" required class="mt-1 block w-full border border-gray-300 rounded p-2">
+        </div>
+        <div class="mb-4">
+            <label for="document_number" class="block text-sm font-medium">Document Number</label>
+            <input type="text" name="document_number" required class="mt-1 block w-full border border-gray-300 rounded p-2">
+        </div>
+        <div class="mb-4">
+            <label for="document" class="block text-sm font-medium">Upload Document</label>
+            <input type="file" name="document" required class="mt-1 block w-full">
+        </div>
+        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Submit</button>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% from "_formhelpers.html" import render_field %}
+
+{% block title %}Login with OTP - ShramBandhu{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gray-50">
+    <div class="max-w-md w-full space-y-8">
+        {# Card container #}
+        <div class="bg-white p-8 rounded-2xl shadow-xl border border-gray-200">
+            <div>
+                <h2 class="mt-2 text-center text-3xl font-extrabold text-gray-900">
+                    Sign in with Phone OTP
+                </h2>
+                 <p class="mt-2 text-center text-sm text-gray-600">
+                     Enter your registered phone number to receive an OTP.
+                 </p>
+            </div>
+            <form class="mt-8 space-y-5" method="POST" action="{{ url_for('auth.login_otp') }}" novalidate>
+                 {{ form.hidden_tag() }}
+                 {{ render_field(form.phone, placeholder="+91XXXXXXXXXX", type="tel", autofocus=true) }}
+
+                <div>
+                    <button type="submit" class="group relative w-full flex justify-center py-2.5 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out">
+                        Send OTP
+                    </button>
+                </div>
+            </form>
+            <div class="text-sm text-center mt-6">
+                <a href="{{ url_for('auth.login') }}" class="font-medium text-blue-600 hover:text-blue-500">
+                    « Back to Email Login
+                </a>
+            </div>
+        </div> {# End Card #}
+    </div>
+</div>
+{% endblock %}

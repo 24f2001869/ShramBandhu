@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-6">Platform Analytics</h1>
+    
+    <!-- Metrics Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h3 class="text-gray-500">Total Workers</h3>
+            <p class="text-3xl font-bold">{{ total_workers }}</p>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h3 class="text-gray-500">Total Employers</h3>
+            <p class="text-3xl font-bold">{{ total_employers }}</p>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h3 class="text-gray-500">Total Jobs</h3>
+            <p class="text-3xl font-bold">{{ total_jobs }}</p>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h3 class="text-gray-500">Total Payments</h3>
+            <p class="text-3xl font-bold">₹{{ "%.2f"|format(total_payments) }}</p>
+        </div>
+    </div>
+    
+    <!-- Rating Distribution -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+        <h2 class="text-xl font-semibold mb-4">Worker Ratings</h2>
+        <div class="grid grid-cols-5 gap-4">
+            {% for i in range(5, 0, -1) %}
+            <div class="text-center">
+                <div class="text-4xl mb-1">⭐️ {{ i }}</div>
+                <div class="text-lg font-bold">
+                    {{ rating_distribution|selectattr('0', 'equalto', i)|map(attribute='1')|sum or 0 }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- Recent Activity -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold mb-4">Recent Jobs</h2>
+            <ul class="space-y-3">
+                {% for job in recent_jobs %}
+                <li class="border-b pb-2">
+                    <h3 class="font-medium">{{ job.title }}</h3>
+                    <p class="text-sm text-gray-600">{{ job.created_at.strftime('%d %b %Y') }}</p>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold mb-4">Recent Payments</h2>
+            <ul class="space-y-3">
+                {% for payment in recent_payments %}
+                <li class="border-b pb-2">
+                    <div class="flex justify-between">
+                        <span>₹{{ "%.2f"|format(payment.amount) }}</span>
+                        <span class="text-sm text-gray-600">{{ payment.created_at.strftime('%d %b') }}</span>
+                    </div>
+                    <p class="text-sm text-gray-600">{{ payment.job.title }}</p>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

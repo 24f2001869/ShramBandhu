@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-6">Emergency Resources</h1>
+    
+    <div class="grid md:grid-cols-2 gap-6">
+        <!-- Hospitals -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold mb-4">Nearby Hospitals</h2>
+            <ul class="space-y-3">
+                {% for hospital in hospitals %}
+                <li class="p-3 border rounded-lg hover:bg-gray-50">
+                    <h3 class="font-medium">{{ hospital.name }}</h3>
+                    <a href="https://www.google.com/maps?q={{ hospital.lat }},{{ hospital.lng }}"
+                       target="_blank" class="text-blue-600 text-sm">
+                        View on Map
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        
+        <!-- Emergency Contacts -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold mb-4">Emergency Contacts</h2>
+            <ul class="space-y-3">
+                <li class="p-3 border rounded-lg hover:bg-gray-50">
+                    <span class="font-medium">Police</span>
+                    <a href="tel:100" class="block text-blue-600">100</a>
+                </li>
+                <li class="p-3 border rounded-lg hover:bg-gray-50">
+                    <span class="font-medium">Ambulance</span>
+                    <a href="tel:108" class="block text-blue-600">108</a>
+                </li>
+                <li class="p-3 border rounded-lg hover:bg-gray-50">
+                    <span class="font-medium">Women's Helpline</span>
+                    <a href="tel:1091" class="block text-blue-600">1091</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

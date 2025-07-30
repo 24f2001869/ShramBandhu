@@ -1,0 +1,197 @@
+{# shrambandhu/templates/worker/profile.html #}
+{% extends "base.html" %}
+{% from "_formhelpers.html" import render_field %}
+
+{% block title %}My Profile - ShramBandhu{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold text-gray-800 mb-6">My Profile</h1>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Left column: Worker information -->
+        <div class="lg:col-span-1 bg-white p-6 rounded-lg shadow-md">
+            <h2 class="text-xl font-semibold mb-4 border-b pb-2">Your Information</h2>
+            <div class="space-y-3 text-gray-700">
+                <p><strong>Name:</strong> {{ user.name or 'Not Set' }}</p>
+                <p><strong>Role:</strong> {{ user.role|title }}</p>
+                <p><strong>Email:</strong> {{ user.email or 'Not Set' }}
+                    <span class="text-xs ml-1 px-1.5 py-0.5 rounded {{ 'bg-green-100 text-green-700' if user.is_email_verified else 'bg-yellow-100 text-yellow-700' }}">
+                        {{ 'Verified' if user.is_email_verified else 'Not Verified' }}
+                    </span>
+                </p>
+                <p class="flex items-center justify-between">
+                    <span><strong>Phone:</strong> {{ user.phone or 'Not Set' }}</span>
+                     {% if user.phone %}
+                         <span class="text-xs ml-2 px-1.5 py-0.5 rounded {{ 'bg-green-100 text-green-700' if user.is_phone_verified else 'bg-yellow-100 text-yellow-700' }}">
+                             {{ 'Verified' if user.is_phone_verified else 'Not Verified' }}
+                         </span>
+                     {% endif %}
+                 </p>
+                 {# Show Verify Button if phone exists but is not verified #}
+                 {% if user.phone and not user.is_phone_verified %}
+                     <form action="{{ url_for('worker.resend_profile_phone_otp') }}" method="POST" class="mt-2">
+                          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                          <button type="submit" class="w-full text-xs bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-1 px-3 rounded-md transition duration-150 ease-in-out">
+                             Verify Phone Now
+                          </button>
+                     </form>
+                 {% endif %}
+                <p><strong>Skills:</strong> {{ user.skills or 'Not Set' }}</p>
+                <p><strong>Experience:</strong> {{ user.experience_years if user.experience_years is not none else 'Not Set' }} years</p>
+                <p><strong>Current Location:</strong> {{ user.location_address or ( (user.location_lat | string) + ', ' + (user.location_lng | string) ) if user.location_lat else 'Not Set' }}</p>
+                <p><strong>Overall Verification:</strong>
+                    <span class="font-medium capitalize {{ 'text-green-600' if user.overall_verification_status == 'verified' else ('text-yellow-600' if user.overall_verification_status in ['pending', 'partially_verified'] else 'text-red-600') }}">
+                        {{ user.overall_verification_status.replace('_', ' ') }}
+                    </span>
+                </p>
+                <p class="text-sm text-gray-500">Member since: {{ user.created_at.strftime('%d %b %Y') }}</p>
+            </div>
+        </div>
+
+        <!-- Right column: Update form + Map -->
+        <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-md">
+            <h2 class="text-xl font-semibold mb-4 border-b pb-2">Update Profile</h2>
+            <form method="POST" action="{{ url_for('worker.profile') }}" class="space-y-6" novalidate>
+                {{ form.hidden_tag() }}
+                {{ render_field(form.name) }}
+                {# --- Add Phone Input Field --- #}
+                {{ render_field(form.phone, type="tel", placeholder="+91XXXXXXXXXX") }}
+                {# --------------------------- #}
+                {{ render_field(form.skills, placeholder="Enter skills separated by commas") }}
+                {{ render_field(form.experience_years) }}
+
+                <!-- Map Section -->
+                <div>
+                    <label for="worker_address" class="block text-sm font-medium text-gray-700 mb-1">Your Location</label>
+                    <p class="text-xs text-gray-500 mb-2">Set your primary location by dragging the pin.</p>
+                    <input type="text" id="worker_address" name="location_address" value="{{ user.location_address or '' }}"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 mb-3"
+                        placeholder="Address (optional, will auto-update from map)">
+                    <input type="hidden" id="worker_latitude" name="latitude" value="{{ user.location_lat or '' }}">
+                    <input type="hidden" id="worker_longitude" name="longitude" value="{{ user.location_lng or '' }}">
+                    <div id="worker_map" class="leaflet-map-container h-64 rounded shadow"></div>
+                </div>
+
+                {{ form.submit(class="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500") }}
+            </form>
+        </div>
+    </div>
+
+    <!-- Document Verification Section -->
+    <div class="mt-8 bg-white p-6 rounded-lg shadow-md">
+        <div class="flex justify-between items-center mb-4 border-b pb-2">
+            <h2 class="text-xl font-semibold">Verification Documents</h2>
+            <a href="{{ url_for('worker.upload_document') }}"
+                class="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                + Upload New Document
+            </a>
+        </div>
+
+        {% if not documents %}
+            <p class="text-gray-600 text-center py-4">You haven't uploaded any verification documents yet.</p>
+        {% else %}
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Document Type</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Submitted</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for doc in documents %}
+                        <tr>
+                            <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ doc.document_type | replace('_', ' ') | title }}</td>
+                            <td class="px-4 py-4 whitespace-nowrap text-sm">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full capitalize
+                                    {% if doc.status == 'verified' %} bg-green-100 text-green-800
+                                    {% elif doc.status == 'rejected' %} bg-red-100 text-red-800
+                                    {% else %} bg-yellow-100 text-yellow-800 {% endif %}">
+                                    {{ doc.status }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{{ doc.created_at.strftime('%d %b %Y') }}</td>
+                            <td class="px-4 py-4 text-sm text-gray-500">
+                                {% if doc.status == 'rejected' and doc.rejection_reason %}
+                                    <span title="{{ doc.rejection_reason }}">{{ doc.rejection_reason | truncate(30) }}</span>
+                                {% elif doc.document_number %}
+                                    {{ doc.document_number }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td class="px-4 py-4 whitespace-nowrap text-sm font-medium">
+                                <a href="{{ url_for('worker.uploaded_document', filename=doc.file_path) }}" target="_blank" class="text-blue-600 hover:text-blue-800">View</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const latInput = document.getElementById('worker_latitude');
+        const lonInput = document.getElementById('worker_longitude');
+        const addressInput = document.getElementById('worker_address');
+
+        const initialLat = parseFloat(latInput.value) || 17.3850;
+        const initialLng = parseFloat(lonInput.value) || 78.4867;
+
+        const map = L.map('worker_map').setView([initialLat, initialLng], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        const marker = L.marker([initialLat, initialLng], {
+            draggable: true,
+            autoPan: true
+        }).addTo(map);
+
+        function updateWorkerLocationFields(lat, lng, updateAddress = false) {
+            marker.setLatLng([lat, lng]);
+            latInput.value = lat.toFixed(6);
+            lonInput.value = lng.toFixed(6);
+
+            if (updateAddress && addressInput) {
+                fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data && data.display_name) {
+                            addressInput.value = data.display_name;
+                        }
+                    })
+                    .catch(err => console.error('Reverse geocoding failed:', err));
+            }
+        }
+
+        marker.on('dragend', function (e) {
+            const position = marker.getLatLng();
+            map.panTo(position);
+            updateWorkerLocationFields(position.lat, position.lng, true);
+        });
+
+        if (!latInput.value && !lonInput.value && navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(pos => {
+                const userLat = pos.coords.latitude;
+                const userLng = pos.coords.longitude;
+                map.setView([userLat, userLng], 14);
+                updateWorkerLocationFields(userLat, userLng, true);
+            }, () => {
+                console.warn("Geolocation failed. Using default location.");
+            });
+        }
+    });
+</script>
+{% endblock %}

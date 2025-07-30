@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+{% from "_formhelpers.html" import render_field %} {# Import form helper macro #}
+
+{% block title %}Post New Job - ShramBandhu{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="max-w-3xl mx-auto"> {# Increased max-width for job form #}
+        {# Card container #}
+        <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-xl border border-gray-200">
+            <div class="mb-6 pb-3 border-b border-gray-200">
+                 <h1 class="text-2xl font-bold text-gray-800">Post a New Job</h1>
+                 <p class="text-sm text-gray-500 mt-1">Fill in the details below to find suitable workers.</p>
+            </div>
+
+            {# Assumes PostJobForm is passed as 'form' from the route #}
+            <form method="POST" action="{{ url_for('employer.post_job') }}" class="space-y-6" novalidate>
+                {{ form.hidden_tag() }} {# Includes CSRF token and hidden fields like lat/lng #}
+
+                {{ render_field(form.title, placeholder="e.g., Experienced Electrician Needed Urgently", autofocus=true) }}
+                {{ render_field(form.description, rows=4, placeholder="Describe the work involved, specific requirements, working hours, etc.") }}
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
+                    {{ render_field(form.salary, type="number", step="10", min="1", placeholder="e.g., 800") }}
+                    {{ render_field(form.salary_frequency) }}
+                </div>
+
+                 <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
+                    {{ render_field(form.job_type) }}
+                    <div id="duration-field-container" class="hidden"> {# Start hidden if default type isn't contract #}
+                        {{ render_field(form.duration_days, type="number", min="1", placeholder="e.g., 7 (Required for Contract)") }}
+                    </div>
+                </div>
+
+                 {{ render_field(form.skills, placeholder="e.g., wiring, masonry, plastering (comma-separated)") }}
+
+                 {# --- Map Integration --- #}
+                 <div class="space-y-3 pt-2">
+                     <label for="address" class="block text-sm font-medium text-gray-700">Job Location*</label>
+                     <p class="text-xs text-gray-500 -mt-1 mb-1">Enter address or drag map pin. Pin location takes priority.</p>
+                     {# Render address field from WTForm #}
+                     {{ render_field(form.address, label_visible=false, placeholder="Full address, landmark, city") }}
+                     {# Hidden fields lat/lng are rendered by form.hidden_tag() #}
+                     <div id="map" class="leaflet-map-container"></div>
+                     {# Display validation errors for hidden lat/lng if necessary #}
+                     {% if form.latitude.errors or form.longitude.errors %}
+                        <p class="text-red-600 text-xs italic mt-1">Map location pin is required.</p>
+                     {% endif %}
+                 </div>
+                 {# --- End Map Integration --- #}
+
+
+                <div class="pt-5">
+                    <button type="submit" class="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out">
+                        Post Job
+                    </button>
+                </div>
+            </form>
+        </div> {# End Card #}
+    </div> {# End Container #}
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }} {# Include base scripts #}
+{# --- Include Leaflet Map JS --- #}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // --- Job Type / Duration Field Logic ---
+    const jobTypeSelect = document.getElementById('job_type');
+    const durationContainer = document.getElementById('duration-field-container');
+    const durationInput = document.getElementById('duration_days');
+
+    function toggleDurationField() {
+        if (!jobTypeSelect || !durationContainer || !durationInput) return; // Exit if elements not found
+        if (jobTypeSelect.value === 'contract') {
+            durationContainer.style.display = 'block';
+            durationInput.required = true;
+        } else {
+            durationContainer.style.display = 'none';
+            durationInput.required = false;
+        }
+    }
+    if (jobTypeSelect) {
+        jobTypeSelect.addEventListener('change', toggleDurationField);
+        toggleDurationField(); // Initial check on page load
+    } else {
+        console.error("Job type select field not found");
+    }
+
+    // --- Leaflet Map Initialization ---
+    const latInput = document.getElementById('latitude');
+    const lonInput = document.getElementById('longitude');
+    const addressInput = document.getElementById('address');
+    const mapElement = document.getElementById('map');
+
+    if (!latInput || !lonInput || !addressInput || !mapElement || typeof L === 'undefined') {
+        console.error("Map initialization failed: Missing elements or Leaflet library.");
+        if(mapElement) mapElement.innerHTML = '<p class="text-red-500 p-4">Map could not be loaded.</p>';
+        return; // Stop if essential elements or Leaflet are missing
+    }
+
+    const defaultLat = 17.3850; const defaultLng = 78.4867; // Hyderabad default
+    let currentLat = parseFloat(latInput.value) || defaultLat;
+    let currentLng = parseFloat(lonInput.value) || defaultLng;
+
+    const map = L.map('map').setView([currentLat, currentLng], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(map);
+    const marker = L.marker([currentLat, currentLng], { draggable: true, autoPan: true }).addTo(map);
+
+    function updateMarkerAndFields(lat, lng, updateAddress = false) {
+        marker.setLatLng([lat, lng]);
+        latInput.value = lat.toFixed(6);
+        lonInput.value = lng.toFixed(6);
+        if (updateAddress) {
+             // Using Nominatim - Be mindful of usage limits! Replace with paid service if needed.
+             fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&addressdetails=1`)
+             .then(response => response.ok ? response.json() : Promise.reject('Nominatim error ' + response.status))
+             .then(data => {
+                 if (data && data.display_name) {
+                     // Construct a slightly shorter address if possible
+                     let adr = data.address;
+                     let displayAddr = data.display_name;
+                     // Example: try building road, neighbourhood, city, postcode
+                     // This needs refinement based on expected address quality
+                     // displayAddr = [adr.road, adr.neighbourhood, adr.suburb, adr.city_district, adr.city, adr.postcode, adr.country]
+                     //              .filter(Boolean).join(', ');
+                     addressInput.value = displayAddr;
+                 }
+             })
+             .catch(err => console.error('Reverse geocoding failed:', err));
+        }
+    }
+    // Ensure hidden fields have initial values
+    if(!latInput.value) latInput.value = currentLat.toFixed(6);
+    if(!lonInput.value) lonInput.value = currentLng.toFixed(6);
+
+    marker.on('dragend', function(e) {
+        const pos = marker.getLatLng();
+        map.panTo(pos); // Smoothly center map
+        updateMarkerAndFields(pos.lat, pos.lng, true); // Update address when pin stops dragging
+    });
+
+    // Optional: Geocode address input (requires more setup/library)
+    // addressInput.addEventListener('change', function() { ... });
+
+    // Optional: Try using browser geolocation to center map initially
+    if (!latInput.value && navigator.geolocation) {
+         navigator.geolocation.getCurrentPosition(position => {
+             const userLat = position.coords.latitude; const userLng = position.coords.longitude;
+             map.setView([userLat, userLng], 14); updateMarkerAndFields(userLat, userLng, true); // Set initial pin & address
+         }, () => {
+             console.warn("Geolocation failed or permission denied.");
+             // Silently fail or show message
+         }, { timeout: 5000 }); // Add timeout
+    }
+
+    // Invalidate map size if it was hidden initially or resized (e.g., in modals/tabs)
+    // Use ResizeObserver if available for more robustness
+    setTimeout(() => { map.invalidateSize() }, 200);
+
+});
+</script>
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% from "_formhelpers.html" import render_field %}
+
+{% block title %}Set New Password - ShramBandhu{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gray-50">
+     <div class="max-w-md w-full space-y-8">
+        {# Card container #}
+        <div class="bg-white p-8 rounded-2xl shadow-xl border border-gray-200">
+            <div>
+                <h2 class="mt-2 text-center text-3xl font-extrabold text-gray-900">
+                    Set Your New Password
+                </h2>
+                 <p class="mt-2 text-center text-sm text-gray-600">
+                     Choose a strong password you haven't used before.
+                 </p>
+            </div>
+            <form class="mt-8 space-y-5" method="POST" action="{{ url_for('auth.reset_token', token=token) }}" novalidate>
+                 {{ form.hidden_tag() }}
+                 {# Optional: <input type="hidden" name="token" value="{{ token }}"> #}
+
+                 {{ render_field(form.password, placeholder="Enter New Password", type="password", autofocus=true) }}
+                 {{ render_field(form.confirm_password, placeholder="Confirm New Password", type="password") }}
+
+                <div>
+                    <button type="submit" class="group relative w-full flex justify-center py-2.5 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out">
+                        Set New Password
+                    </button>
+                </div>
+            </form>
+         </div> {# End Card #}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Notifications - Employer{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    {# Header Section #}
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-3 pb-3 border-b border-gray-200">
+        <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">Your Notifications</h1>
+        {# Add Clear All button? Only if there are unread notifications? #}
+        <form action="{{ url_for('employer.clear_notifications') }}" method="POST">
+             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+             <button type="submit" class="text-sm text-blue-600 hover:underline" {% if not notifications or not notifications|selectattr('is_read', 'equalto', false)|list %}disabled title="No unread notifications"{% endif %}>
+                 Mark All as Read
+             </button>
+        </form>
+    </div>
+
+     {# Notifications List #}
+    <div class="bg-white rounded-lg shadow-md border border-gray-200">
+        {% if not notifications %}
+        <div class="p-8 text-center text-gray-500">
+            <i class="fas fa-bell-slash text-4xl text-gray-300 mb-4"></i>
+            <p class="text-lg">You have no notifications.</p>
+        </div>
+        {% else %}
+        <ul class="divide-y divide-gray-200">
+            {% for notification in notifications %}
+            <li class="p-4 hover:bg-gray-50 transition duration-150 ease-in-out {% if not notification.is_read %}bg-blue-50{% endif %}">
+                 <div class="flex items-start gap-3">
+                    {# Icon based on type or just generic #}
+                    <div class="mt-1">
+                         <span class="inline-flex items-center justify-center h-6 w-6 rounded-full {{ 'bg-blue-100' if not notification.is_read else 'bg-gray-100' }}">
+                             <i class="fas fa-info-circle text-xs {{ 'text-blue-600' if not notification.is_read else 'text-gray-400' }}"></i>
+                         </span>
+                    </div>
+                    <div class="flex-1">
+                         <p class="text-sm {{ 'font-semibold text-gray-900' if not notification.is_read else 'text-gray-700' }}">
+                            {{ notification.title }}
+                         </p>
+                         <p class="text-sm {{ 'text-gray-800' if not notification.is_read else 'text-gray-600' }} mt-0.5">
+                            {{ notification.message }}
+                         </p>
+                         <div class="mt-1 flex items-center gap-3 text-xs text-gray-400">
+                             <span>{{ notification.created_at | time_ago }}</span>
+                             {% if notification.link_url %}
+                                 <a href="{{ notification.link_url }}" class="text-blue-500 hover:underline">View Details</a>
+                             {% endif %}
+                         </div>
+                    </div>
+                 </div>
+            </li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    </div>
+     {# Add pagination if notification list can be very long #}
+
+</div>
+{% endblock %}

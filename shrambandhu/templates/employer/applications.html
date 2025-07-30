@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Applications for {{ job.title }} - ShramBandhu{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    {# Header Section #}
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-3 pb-3 border-b border-gray-200">
+        <div>
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">Applications for "{{ job.title }}"</h1>
+            <p class="text-sm text-gray-500 mt-1">Review candidates who have applied for this job.</p>
+        </div>
+        <a href="{{ url_for('employer.view_job', job_id=job.id) }}" class="text-sm text-blue-600 hover:underline whitespace-nowrap">
+             &larr; Back to Job Details
+        </a>
+    </div>
+
+    {# Application List #}
+    {% if not applications %}
+        <div class="bg-white rounded-lg shadow-md border border-gray-200 p-8 text-center text-gray-500">
+            <i class="fas fa-users-slash text-4xl text-gray-300 mb-4"></i>
+            <p class="text-lg">No applications received for this job yet.</p>
+        </div>
+    {% else %}
+         <div class="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden">
+            <ul class="divide-y divide-gray-200">
+                 {% for application in applications %}
+                  <li class="p-4 sm:p-6 hover:bg-gray-50 transition duration-150 ease-in-out">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        {# Worker Info #}
+                        <div class="flex items-center gap-4 flex-1 min-w-0">
+                             <span class="inline-block h-10 w-10 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
+                                 {# Placeholder Avatar #}
+                                 <svg class="h-full w-full text-gray-300" fill="currentColor" viewBox="0 0 24 24"><path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                             </span>
+                             <div class="flex-1 min-w-0">
+                                 <p class="text-sm font-medium text-gray-900 truncate">{{ application.worker.name }}</p>
+                                 <p class="text-xs text-gray-500">{{ application.worker.phone }}</p>
+                                 {# Display Worker Rating #}
+                                 {% set avg_rating = application.worker.average_rating %}
+                                 <p class="text-xs text-gray-500 mt-0.5">
+                                     Rating: {% if avg_rating %}<span class="text-yellow-500 font-semibold">{{ avg_rating }}★</span>{% else %}N/A{% endif %}
+                                     ({{ application.worker.ratings_count }} reviews)
+                                 </p>
+                             </div>
+                        </div>
+                        {# Status and Actions #}
+                        <div class="flex flex-col sm:flex-row items-start sm:items-end gap-2 mt-2 sm:mt-0 flex-shrink-0">
+                            <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full capitalize whitespace-nowrap mb-2 sm:mb-0
+                                {% if application.status == 'accepted' %} bg-green-100 text-green-800
+                                {% elif application.status == 'rejected' or application.status == 'withdrawn' %} bg-red-100 text-red-800
+                                {% elif application.status == 'shortlisted' %} bg-blue-100 text-blue-800
+                                {% else %} bg-yellow-100 text-yellow-800 {% endif %}">
+                                {{ application.status }}
+                            </span>
+                            <div class="flex gap-2 items-center">
+                                {# Show buttons only if job is active and application is pending #}
+                                {% if job.status == 'active' and application.status == 'applied' %}
+                                <form method="POST" action="{{ url_for('employer.application_action', application_id=application.id) }}">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                    <input type="hidden" name="action" value="accept">
+                                    <button type="submit" class="px-3 py-1 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700">Accept</button>
+                                </form>
+                                <form method="POST" action="{{ url_for('employer.application_action', application_id=application.id) }}">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                    <input type="hidden" name="action" value="reject">
+                                    <button type="submit" class="px-3 py-1 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">Reject</button>
+                                </form>
+                                {% endif %}
+                                <a href="{{ url_for('employer.view_worker', worker_id=application.worker_id) }}" class="px-3 py-1 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">Profile</a>
+                            </div>
+                        </div>
+                    </div>
+                 </li>
+                 {% endfor %}
+             </ul>
+         </div>
+         {# Add Pagination if needed #}
+    {% endif %}
+
+</div>
+{% endblock %}

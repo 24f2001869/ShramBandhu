@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+{% from "_formhelpers.html" import render_field, render_radio %} {# Import render_radio #}
+
+{% block title %}{{ title or 'Find Jobs' }} - ShramBandhu{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold text-gray-800 mb-6">Find Work</h1>
+
+    {# --- Search Filter Form --- #}
+    <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+        <form method="GET" action="{{ url_for('worker.find_jobs') }}">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+                {# Keywords #}
+                <div>
+                    {{ form.keywords.label(class="block text-sm font-medium text-gray-700 mb-1") }}
+                    {{ form.keywords(class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm focus:ring-blue-500 focus:border-blue-500", placeholder="Job title, description...") }}
+                </div>
+                {# Distance #}
+                 <div>
+                    {{ form.distance.label(class="block text-sm font-medium text-gray-700 mb-1") }}
+                    {{ form.distance(class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm focus:ring-blue-500 focus:border-blue-500 bg-white") }}
+                </div>
+                 {# Skills #}
+                 <div>
+                    {{ form.skills.label(class="block text-sm font-medium text-gray-700 mb-1") }}
+                    {{ form.skills(class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm focus:ring-blue-500 focus:border-blue-500", placeholder="e.g., plumbing, driver") }}
+                </div>
+                 {# Job Type #}
+                 <div>
+                    {{ form.job_type.label(class="block text-sm font-medium text-gray-700 mb-1") }}
+                    {{ form.job_type(class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm focus:ring-blue-500 focus:border-blue-500 bg-white") }}
+                </div>
+                 {# Min Salary #}
+                 <div>
+                    {{ form.min_salary.label(class="block text-sm font-medium text-gray-700 mb-1") }}
+                    {{ form.min_salary(class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm focus:ring-blue-500 focus:border-blue-500", type="number", step="50", min="0", placeholder="e.g., 500") }}
+                </div>
+                 {# Sort By #}
+                 <div class="lg:col-span-2">
+                    {{ render_radio(form.sort_by) }}
+                 </div>
+
+                 {# Submit Button #}
+                 <div class="lg:col-span-1 flex items-end">
+                     {{ form.submit(class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500") }}
+                     {# Clear filters link #}
+                     <a href="{{ url_for('worker.find_jobs') }}" class="ml-3 text-xs text-gray-500 hover:text-gray-700 underline whitespace-nowrap">Clear Filters</a>
+                 </div>
+            </div>
+        </form>
+    </div>
+
+    {# --- Search Results --- #}
+    <div class="bg-white rounded-lg shadow">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-xl font-semibold">Job Results ({{ jobs_pagination.total }})</h2>
+        </div>
+
+        {% if not jobs_pagination.items %}
+            <div class="p-8 text-center text-gray-500">
+                No jobs found matching your criteria. Try broadening your search.
+            </div>
+        {% else %}
+            <ul class="divide-y divide-gray-200">
+                {% for job in jobs_pagination.items %}
+                <li class="p-4 md:p-6 hover:bg-gray-50 transition duration-150 ease-in-out">
+                    <div class="flex flex-col md:flex-row justify-between items-start gap-4">
+                        <div class="flex-1 min-w-0">
+                            {# Job Title & Employer #}
+                            <h3 class="font-semibold text-lg text-gray-900 truncate">{{ job.title }}</h3>
+                            <p class="text-sm text-gray-500 mt-1">
+                                {{ job.employer.org_name or job.employer.name or 'Private Employer'}}
+                            </p>
+                             {# Address / Distance #}
+                             <p class="text-sm text-gray-500 mt-1 flex items-center gap-1">
+                                 <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                 {{ job.address | truncate(50) if job.address else 'Location Available' }}
+                                 {% if job.distance is defined %}
+                                    <span class="text-gray-400 ml-1"> (~{{ "%.1f"|format(job.distance) }} km)</span>
+                                 {% endif %}
+                             </p>
+                             {# Skills #}
+                             {% if job.get_skills_list() %}
+                             <div class="mt-2 flex flex-wrap gap-1.5">
+                                 {% for skill in job.get_skills_list()[:5] %}
+                                 <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700">
+                                     {{ skill }}
+                                 </span>
+                                 {% endfor %}
+                                 {% if job.get_skills_list()|length > 5 %}<span class="text-xs text-gray-400 pt-0.5">...</span>{% endif %}
+                             </div>
+                             {% endif %}
+                        </div>
+                        <div class="text-left md:text-right flex-shrink-0 w-full md:w-auto mt-2 md:mt-0">
+                             {# Salary #}
+                             <p class="text-green-600 font-bold text-lg">₹{{ "%.0f"|format(job.salary) }}</p>
+                             <p class="text-xs text-gray-500 capitalize">/ {{ job.salary_frequency }}</p>
+                             {# Posted Date #}
+                             <p class="text-xs text-gray-400 mt-1">Posted: {{ job.created_at | time_ago }}</p>
+                             {# Apply Button #}
+                             <form method="POST" action="{{ url_for('worker.apply', job_id=job.id) }}" class="mt-3">
+                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                 {# Check if already applied #}
+                                 {% set application = current_user.worker_applications.filter_by(job_id=job.id).first() %}
+                                 {% if application %}
+                                    {% if application.status == "withdrawn" %}
+                                        <button type="submit"
+                                                class="text-sm bg-yellow-500 text-white px-4 py-1.5 rounded-md hover:bg-yellow-600 transition duration-200 ease-in-out shadow-sm">
+                                            Re-Apply
+                                        </button>
+                                    {% else %}
+                                        <span class="inline-block text-xs px-3 py-1.5 rounded bg-gray-100 text-gray-600 font-medium">
+                                            Applied ({{ application.status | title }})
+                                        </span>
+                                    {% endif %}
+                                 {% else %}
+                                     <button type="submit"
+                                             class="text-sm bg-blue-600 text-white px-4 py-1.5 rounded-md hover:bg-blue-700 transition duration-200 ease-in-out shadow-sm">
+                                         Apply Now
+                                     </button>
+                                 {% endif %}
+                             </form>
+                           
+                             {# <a href="{{ url_for('job_detail_public', job_id=job.id) }}" class="text-xs text-blue-500 hover:underline mt-1 block">View Details</a> #}
+                        </div>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+
+            {# --- Pagination Controls --- #}
+            {% if jobs_pagination.pages > 1 %}
+            <div class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+                <div class="flex-1 flex justify-between sm:hidden">
+                    {% if jobs_pagination.has_prev %}
+                    <a href="{{ url_for('worker.find_jobs', page=jobs_pagination.prev_num, **request.args) }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"> Previous </a>
+                    {% endif %}
+                    {% if jobs_pagination.has_next %}
+                    <a href="{{ url_for('worker.find_jobs', page=jobs_pagination.next_num, **request.args) }}" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"> Next </a>
+                    {% endif %}
+                </div>
+                <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                    <div>
+                        <p class="text-sm text-gray-700">
+                            Showing
+                            <span class="font-medium">{{ ((jobs_pagination.page - 1) * jobs_pagination.per_page) + 1 if jobs_pagination.total > 0 else 0 }}</span>
+                            to
+                            <span class="font-medium">{{ min(jobs_pagination.page * jobs_pagination.per_page, jobs_pagination.total) }}</span>
+                            of
+                            <span class="font-medium">{{ jobs_pagination.total }}</span>
+                            results
+                        </p>
+                    </div>
+                    <div>
+                        <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                            <a href="{{ url_for('worker.find_jobs', page=jobs_pagination.prev_num, **request.args) if jobs_pagination.has_prev else '#' }}"
+                               class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 {{ 'pointer-events-none opacity-50' if not jobs_pagination.has_prev else '' }}">
+                                <span class="sr-only">Previous</span>
+                                &lsaquo;
+                            </a>
+                            {# Add numbered pages if needed #}
+                            <a href="{{ url_for('worker.find_jobs', page=jobs_pagination.next_num, **request.args) if jobs_pagination.has_next else '#' }}"
+                               class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 {{ 'pointer-events-none opacity-50' if not jobs_pagination.has_next else '' }}">
+                                <span class="sr-only">Next</span>
+                                &rsaquo;
+                            </a>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            {# --- End Pagination --- #}
+
+        {% endif %} {# End if jobs_pagination.items #}
+    </div> {# End Search Results Card #}
+
+</div> {# End Container #}
+{% endblock %}

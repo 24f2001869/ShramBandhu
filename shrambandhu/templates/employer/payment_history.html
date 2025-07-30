@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Payment History - Employer{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    {# Header Section #}
+    <div class="flex justify-between items-center mb-6 pb-3 border-b border-gray-200">
+        <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">Payment History</h1>
+        <a href="{{ url_for('employer.dashboard') }}" class="text-sm text-blue-600 hover:underline whitespace-nowrap">
+             &larr; Back to Dashboard
+        </a>
+    </div>
+
+    {# Payment History Table/List #}
+    {% if not payments or not payments.items %}
+        <div class="bg-white rounded-lg shadow-md border border-gray-200 p-8 text-center text-gray-500">
+            <i class="fas fa-receipt text-4xl text-gray-300 mb-4"></i>
+            <p class="text-lg">You haven't made or recorded any payments yet.</p>
+        </div>
+    {% else %}
+        <div class="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Job</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Worker</th>
+                            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                            <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Method</th>
+                            <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Details</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for payment in payments.items %}
+                        <tr class="hover:bg-gray-50 transition duration-150 ease-in-out">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ payment.created_at.strftime('%d %b %Y') }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <a href="{{ url_for('employer.view_job', job_id=payment.job.id) }}" class="text-sm font-medium text-blue-700 hover:underline">{{ payment.job.title }}</a>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <a href="{{ url_for('employer.view_worker', worker_id=payment.worker.id) }}" class="text-sm font-medium text-gray-800 hover:underline">{{ payment.worker.name }}</a>
+                                <div class="text-xs text-gray-500">{{ payment.worker.phone }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-semibold text-green-600">₹{{ "%.2f"|format(payment.amount) }}</td>
+                             <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 capitalize">{{ payment.method or '-' }}</td>
+                             <td class="px-6 py-4 whitespace-nowrap text-center">
+                                 <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full capitalize
+                                     {% if payment.status == 'verified' or payment.status == 'completed' %} bg-green-100 text-green-800
+                                     {% elif payment.status == 'rejected' or payment.status == 'failed' or payment.status == 'disputed' %} bg-red-100 text-red-800
+                                     {% else %} bg-yellow-100 text-yellow-800 {% endif %}"> {# Default pending #}
+                                     {{ payment.status }}
+                                 </span>
+                             </td>
+                              <td class="px-6 py-4 whitespace-nowrap text-center text-xs text-gray-500">
+                                 {{ payment.transaction_id or '-' }}
+                                 {% if payment.receipt_path %}
+                                 {# Need route to serve receipts #}
+                                 <a href="#" class="ml-2 text-blue-500 hover:underline">(Receipt)</a>
+                                 {% endif %}
+                             </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+             {# --- Pagination --- #}
+             {% if payments.pages > 1 %}
+             <div class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+                  {# Pagination links like in find_jobs template #}
+                   <div class="flex-1 flex justify-between sm:hidden"> ... </div>
+                   <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between"> <div> <p class="text-sm text-gray-700"> Showing <span class="font-medium">{{ payments.first }}</span> to <span class="font-medium">{{ payments.last }}</span> of <span class="font-medium">{{ payments.total }}</span> results </p> </div> <div> <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"> <a href="{{ url_for(request.endpoint, page=payments.prev_num, **request.args) if payments.has_prev else '#' }}" class="...">‹</a> <a href="{{ url_for(request.endpoint, page=payments.next_num, **request.args) if payments.has_next else '#' }}" class="...">›</a> </nav> </div> </div>
+             </div>
+             {% endif %}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% from "_formhelpers.html" import render_field, render_radio %} {# Include render_radio helper #}
+
+{% block title %}Initiate Payment - ShramBandhu{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="max-w-xl mx-auto"> {# Center the content #}
+
+        {# Card Container #}
+        <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-xl border border-gray-200">
+
+            {# Header #}
+            <div class="mb-6 pb-3 border-b border-gray-200">
+                 <h1 class="text-2xl font-bold text-gray-800">Initiate Payment</h1>
+                 {# Check if job object exists before accessing title #}
+                 <p class="text-sm text-gray-500 mt-1">Select payment method for job:
+                     <strong>{{ job.title if job else 'N/A' }}</strong>
+                 </p>
+            </div>
+
+            {# Job & Worker Summary #}
+            <div class="mb-6 p-4 border rounded-lg bg-gray-50 text-sm space-y-2">
+                {% if job and application and application.worker %}
+                <p><strong>Job:</strong> {{ job.title }}</p>
+                <p><strong>Worker:</strong> {{ application.worker.name }} ({{ application.worker.phone }})</p>
+                <p><strong>Amount Due:</strong> <span class="font-semibold text-lg text-green-600">₹{{ "%.2f"|format(job.salary) }}</span></p>
+                {% else %}
+                <p class="text-red-600">Error: Job or Worker details missing.</p>
+                {% endif %}
+            </div>
+
+            {# Payment Method Selection Form #}
+            {# Assumes PaymentForm is passed as 'form' from the route #}
+            {% if job and application and application.worker %}
+            <form method="POST" action="{{ url_for('employer.initiate_payment', application_id=application.id) }}" novalidate>
+                {{ form.hidden_tag() }} {# CSRF token #}
+
+                {# Render Payment Method Radio Buttons #}
+                {{ render_radio(form.payment_method, label_visible=true) }}
+
+                {# Form Actions #}
+                <div class="mt-6 pt-5 border-t border-gray-100 flex flex-col sm:flex-row gap-4">
+                     <button type="submit"
+                             class="w-full sm:w-auto inline-flex justify-center py-2.5 px-6 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out">
+                        Proceed
+                    </button>
+                    <a href="{{ url_for('employer.view_job', job_id=job.id) }}"
+                       class="w-full sm:w-auto inline-flex justify-center py-2.5 px-6 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+            {% endif %}
+
+        </div> {# End Card #}
+    </div> {# End Centered Container #}
+</div> {# End Main Container #}
+{% endblock %}

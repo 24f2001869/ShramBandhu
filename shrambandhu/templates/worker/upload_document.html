@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% from "_formhelpers.html" import render_field %}
+
+{% block title %}Upload Document - ShramBandhu{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8 max-w-xl">
+
+    <div class="bg-white p-8 rounded-lg shadow-md">
+        <h1 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-3">Upload Verification Document</h1>
+
+        <form method="POST" action="{{ url_for('worker.upload_document') }}" enctype="multipart/form-data" novalidate>
+            {{ form.hidden_tag() }}
+            {{ render_field(form.document_type) }}
+            {{ render_field(form.document_number) }}
+            {{ render_field(form.document_file) }}
+
+            <div class="mt-6">
+                {{ form.submit(class="inline-flex items-center px-6 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500") }}
+                <a href="{{ url_for('worker.profile') }}" class="ml-4 text-sm text-gray-600 hover:text-gray-800">Cancel</a>
+            </div>
+        </form>
+    </div>
+
+    {% if documents %}
+    <div class="mt-8 bg-white p-6 rounded-lg shadow-md">
+         <h2 class="text-xl font-semibold mb-4">Your Uploaded Documents</h2>
+         <ul class="divide-y divide-gray-200">
+             {% for doc in documents %}
+             <li class="py-3 flex justify-between items-center">
+                 <div>
+                     <p class="text-sm font-medium text-gray-900">{{ doc.document_type | replace('_', ' ') | title }}</p>
+                     <p class="text-xs text-gray-500">Submitted: {{ doc.created_at.strftime('%d %b %Y') }}</p>
+                 </div>
+                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full capitalize
+                     {% if doc.status == 'verified' %} bg-green-100 text-green-800
+                     {% elif doc.status == 'rejected' %} bg-red-100 text-red-800
+                     {% else %} bg-yellow-100 text-yellow-800 {% endif %}">
+                     {{ doc.status }}
+                 </span>
+             </li>
+             {% endfor %}
+         </ul>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}
