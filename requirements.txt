@@ -22,3 +22,5 @@ geopy
 google
 google-cloud-core
 google-auth
+google-cloud-speech
+
