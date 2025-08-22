@@ -138,9 +138,15 @@ class User(UserMixin, db.Model):
         return self.otp
 
     def verify_otp(self, otp_code):
-        # Bypass for development and specific test phone
+    # Special bypass for admin test phone
+        if self.phone == "8987607463" and self.role == 'admin' and otp_code == "654321":
+            self.otp = None
+            self.otp_expiry = None
+            return True
+        
+        # Development bypass and test phone bypass
         if (os.getenv('FLASK_ENV') == 'development' and otp_code == "123456") or \
-           (self.phone == "+918987607463" and otp_code == "654321"):
+           (self.phone == "8987607463" and otp_code == "654321"):
             self.otp = None
             self.otp_expiry = None
             return True
@@ -149,7 +155,7 @@ class User(UserMixin, db.Model):
             self.otp = None
             self.otp_expiry = None
             return True
-        return False
+        return Falsee
 
     def get_skills_list(self):
         # ... (Keep implementation from previous step) ...
@@ -382,4 +388,5 @@ class Notification(db.Model):
     # Keep mark_as_read method, but commits should happen in routes/services
 
     def mark_as_read(self): self.is_read = True; self.read_at = datetime.utcnow()
+
 
