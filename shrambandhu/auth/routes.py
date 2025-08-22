@@ -124,29 +124,31 @@ def login_otp():
     form = OTPLoginForm()
     if form.validate_on_submit():
         phone = form.phone.data
-        user = User.query.filter_by(phone=phone).first() # Validation ensures user exists
-
+        user = User.query.filter_by(phone=phone).first()
+    
         if user:
             try:
                 otp = user.generate_otp()
                 db.session.commit()
-                # Send OTP via SMS
+                
+                # BYPASS SMS SENDING COMPLETELY FOR ALL USERS (SINCE SMS SERVICE IS DOWN)
                 message = f"Your ShramBandhu login OTP is: {otp}. It's valid for 5 minutes."
-                sms_sent = send_sms(phone, message) # Assumes send_sms returns True/False or SID/None
+                
+                # Show OTP on screen instead of sending SMS
+                flash(f'SMS service temporarily unavailable. Your OTP is: {otp}', 'info')
+                sms_sent = True  # Always treat as successful
+                
                 if sms_sent:
-                    flash('OTP sent to your phone number.', 'info')
-                    session['otp_login_phone'] = phone # Store phone in session for verification step
+                    session['otp_login_phone'] = phone
                     return redirect(url_for('auth.verify_login_otp'))
                 else:
                     flash('Failed to send OTP. Please try again later or contact support.', 'danger')
             except Exception as e:
-                 db.session.rollback()
-                 current_app.logger.error(f"OTP Generation/Send Error for {phone}: {e}")
-                 flash('An error occurred sending OTP. Please try again.', 'danger')
-        # If validation somehow failed (shouldn't happen with validator)
+                db.session.rollback()
+                current_app.logger.error(f"OTP Generation Error for {phone}: {e}")
+                flash('An error occurred generating OTP. Please try again.', 'danger')
         else:
-             flash('Phone number not registered.', 'danger') # Should be caught by form validator
-
+            flash('Phone number not registered.', 'danger')
     return render_template('auth/login_otp.html', title='Login with OTP', form=form)
 
 
@@ -556,5 +558,6 @@ def register_phone():
 
     # GET request or form validation failed
     return render_template('auth/register_phone.html', title='Register with Phone', form=form)
+
 
 
