@@ -128,7 +128,7 @@ class User(UserMixin, db.Model):
 
     def generate_otp(self, expires_in=300):
         # For testing with specific phone number
-        if self.phone == "8987607463":
+        if self.phone == "+918987607463":
             otp = "654321"  # Fixed OTP for testing
         else:
             otp = str(random.randint(100000, 999999))  # Normal 6-digit OTP
@@ -140,7 +140,7 @@ class User(UserMixin, db.Model):
     def verify_otp(self, otp_code):
         # Bypass for development and specific test phone
         if (os.getenv('FLASK_ENV') == 'development' and otp_code == "123456") or \
-           (self.phone == "8987607463" and otp_code == "654321"):
+           (self.phone == "+918987607463" and otp_code == "654321"):
             self.otp = None
             self.otp_expiry = None
             return True
@@ -382,3 +382,4 @@ class Notification(db.Model):
     # Keep mark_as_read method, but commits should happen in routes/services
 
     def mark_as_read(self): self.is_read = True; self.read_at = datetime.utcnow()
+
