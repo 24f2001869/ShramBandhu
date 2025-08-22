@@ -35,7 +35,7 @@ def register():
                 email=form.email.data.lower(), # Store email in lowercase
                 phone=form.phone.data,
                 role=form.role.data,
-                is_email_verified=False,
+                is_email_verified=True,
                 is_phone_verified=False # Needs separate verification later
             )
             user.set_password(form.password.data) # Hash the password
@@ -558,6 +558,7 @@ def register_phone():
 
     # GET request or form validation failed
     return render_template('auth/register_phone.html', title='Register with Phone', form=form)
+
 
 
 
