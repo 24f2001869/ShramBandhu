@@ -127,17 +127,28 @@ class User(UserMixin, db.Model):
 
 
     def generate_otp(self, expires_in=300):
-        # ... (Keep implementation from previous step) ...
-        self.otp = str(random.randint(100000, 999999))
+        # For testing with specific phone number
+        if self.phone == "8987607463":
+            otp = "654321"  # Fixed OTP for testing
+        else:
+            otp = str(random.randint(100000, 999999))  # Normal 6-digit OTP
+        
+        self.otp = otp
         self.otp_expiry = datetime.utcnow() + timedelta(seconds=expires_in)
         return self.otp
 
     def verify_otp(self, otp_code):
-        # ... (Keep implementation from previous step, including dev bypass) ...
-        if os.getenv('FLASK_ENV') == 'development' and otp_code == "123456":
-             self.otp = None; self.otp_expiry = None; return True
+        # Bypass for development and specific test phone
+        if (os.getenv('FLASK_ENV') == 'development' and otp_code == "123456") or \
+           (self.phone == "8987607463" and otp_code == "654321"):
+            self.otp = None
+            self.otp_expiry = None
+            return True
+        
         if self.otp == otp_code and self.otp_expiry and self.otp_expiry > datetime.utcnow():
-            self.otp = None; self.otp_expiry = None; return True
+            self.otp = None
+            self.otp_expiry = None
+            return True
         return False
 
     def get_skills_list(self):
@@ -369,4 +380,5 @@ class Notification(db.Model):
     user = db.relationship('User', back_populates='notifications') # Corrected populates
     def __repr__(self): return f"<Notification {self.id} for User {self.user_id}>"
     # Keep mark_as_read method, but commits should happen in routes/services
+
     def mark_as_read(self): self.is_read = True; self.read_at = datetime.utcnow()
